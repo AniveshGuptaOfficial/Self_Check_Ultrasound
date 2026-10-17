@@ -1,0 +1,26 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Output directories and datasets
+FRDR_dataset_1479_download_216_202610160047/
+artifacts/
+experiments/
+*.log
+output1.txt
+
+# PyTest
+.pytest_cache/
+
+# OS specific
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
