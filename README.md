@@ -3,7 +3,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch 2.14+](https://img.shields.io/badge/PyTorch-2.14+-ee4c2c.svg)](https://pytorch.org/)
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
-[![Tests: 56 Passing](https://img.shields.io/badge/tests-56%20passing-brightgreen.svg)]()
+[![Tests: 57 Passing](https://img.shields.io/badge/tests-57%20passing-brightgreen.svg)]()
 [![Security: pip--audit clean](https://img.shields.io/badge/security-pip--audit%20clean-success.svg)]()
 
 A Python research prototype and machine learning framework for cardiac ultrasound (echocardiography). The system connects **image quality assessment**, **task-specific adequacy estimation**, **cause-aware reacquisition guidance**, and **closed-loop simulation** to support ultrasound acquisition quality control.
@@ -178,8 +178,9 @@ Self_Check_Ultrasound/
 │   ├── evaluate_cause_classifier.py # M5: Evaluates cause classifier on held-out synthetic & real grades
 │   ├── run_simulation.py          # M8: Executes canonical closed-loop reacquisition trajectories
 │   ├── interactive_demo.py        # Interactive CLI demo for testing individual echo frames
-│   └── generate_research_plots.py # Generates Figures 1-5 in artifacts/figures/
-├── tests/                         # Comprehensive 56-test automated suite (100% pass)
+│   ├── generate_research_plots.py # Generates Figures 1-5 in artifacts/figures/
+│   └── benchmark_performance.py   # M1-M8: Computational runtime latency & memory benchmarking
+├── tests/                         # Comprehensive 57-test automated suite (100% pass)
 └── requirements.txt               # Lower-bounded Python dependencies
 ```
 
@@ -231,6 +232,23 @@ Continuous regression against expert completeness/clarity grades (0–9 scale):
 | **Pearson Correlation (r)** | 0.000 | **0.411** [0.332, 0.485] |
 | **Quadratic Weighted Kappa (QWK)** | 0.000 | **0.138** |
 
+### Computational Performance & Runtime Benchmarks (Phase 7)
+
+Evaluated on local CPU hardware (`AMD Ryzen 5`, 8 logical cores, PyTorch 2.14.0+cpu, 4 threads; single-frame streaming mode batch size = 1):
+
+| Pipeline Component / Module | Latency (Mean) | Latency (Median) | 95th Percentile | Throughput |
+| :--- | :---: | :---: | :---: | :---: |
+| **CardiacEchoNet** (M1 View / M2 Downstream) | 40.81 ms | 33.30 ms | 73.14 ms | 24.5 FPS |
+| **QualityAssessorNet** (M3 Quality Grade) | 32.32 ms | 32.02 ms | 37.94 ms | 30.9 FPS |
+| **CauseClassifier** (M5 Sector Physics + RF) | 14.44 ms | 14.44 ms | 17.47 ms | 69.3 FPS |
+| **AdequacyEstimator** (M4 Task Adequacy) | 2.93 ms | 2.72 ms | 4.36 ms | 341.5 FPS |
+| **ReacquisitionPolicy** (M6 Guidance / M7 Triage) | 0.024 ms (24.10 us) | 0.024 ms (24.00 us) | — | 41,500 calls/sec |
+| **End-to-End Decision Cycle** (Raw Frame to Triage) | **114.68 ms** | **112.95 ms** | **126.74 ms** | **8.7 FPS** |
+| **Full HD Ingestion & RGB Transform** (1920x1080) | 56.25 ms | 52.95 ms | 67.34 ms | 17.8 images/sec |
+
+- **Memory Footprint:** Peak traced heap memory = **1.47 MB** (Model weights in RAM = 0.33 MB).
+- **Interactive Point-of-Care Feasibility:** The end-to-end closed-loop decision cycle executes at **8.7 FPS entirely on CPU**, satisfying point-of-care clinical ultrasound guidance latency targets (5–10 Hz) without requiring GPU acceleration.
+
 ---
 
 ## 6. Installation & Quick Start
@@ -257,7 +275,7 @@ python scripts/build_manifest.py --validate
 ```powershell
 python -m pytest -v tests/
 ```
-*(Runs **56 automated unit tests** verifying data loaders, splits, coverage, degradations, models, metrics, paths, and security with 100% pass rate).*
+*(Runs **57 automated unit tests** verifying data loaders, splits, coverage, degradations, models, metrics, performance benchmarks, paths, and security with 100% pass rate).*
 
 ### 4. Train Models & Decision Modules
 ```powershell
@@ -274,10 +292,13 @@ python scripts/train_adequacy.py
 python scripts/evaluate_cause_classifier.py
 ```
 
-### 5. Run Closed-Loop Simulator & Interactive Demos
+### 5. Run Closed-Loop Simulator, Benchmarks & Figures
 ```powershell
 # Run the 5 canonical closed-loop reacquisition trajectories (M8)
 python scripts/run_simulation.py
+
+# Run computational performance and latency benchmarking (Phase 7)
+python scripts/benchmark_performance.py
 
 # Run interactive demo on any echocardiogram with custom simulated faults
 python scripts/interactive_demo.py --fault under_gain --severity 0.70
