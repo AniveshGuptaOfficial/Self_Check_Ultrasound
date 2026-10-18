@@ -35,88 +35,137 @@ This project utilizes the **CACTUS** open dataset ([Elmekki et al., 2025](https:
 
 ---
 
-## 3. System Architecture & Core Modules
+## 3. System Architecture & Modular Pipeline (M1–M8)
 
-### 3.1 End-to-End Decision Pipeline
+The system is organized into eight modular, decoupled subsystems (**M1–M8**) coordinating deep learning view classification, continuous quality estimation, out-of-fold task adequacy prediction, sector-masked physical fault diagnosis, actionable operator guidance, and confidence-gated policy triage.
 
-The system coordinates deep learning view classification, continuous quality estimation, out-of-fold task adequacy prediction, sector-masked physical fault diagnosis, and confidence-gated policy triage:
+> [!NOTE]
+> For a full mathematical formulation, sequence diagram, and formal interface definitions, see the complete technical document: [ARCHITECTURE.md](file:///c:/Users/Anivesh/OneDrive/Desktop/Special%20Project/Special%20Project/Self_Check_Ultrasound/ARCHITECTURE.md).
+
+### 3.1 The 8-Module Architectural Matrix
+
+| Module | Core Responsibility | Model / Component | Inputs & Outputs |
+| :--- | :--- | :--- | :--- |
+| **M1. Preprocessing & View Recognition** | Validate images, enforce safety bounds, and identify supported cardiac views. | `resolve_safe_path`, `SectorExtractor`, `transforms.py`, `CardiacEchoNet` / Spatial Logistic | **Input:** Raw Full HD RGB frame (1920x1080x3)<br/>**Output:** Standardized tensor (224x224), sector mask, candidate view distribution |
+| **M2. Downstream Task Model** | Perform a defined, label-supported cardiac analysis task on accepted images. | `CardiacEchoNet` (4-stage CNN, ~370k parameters) | **Input:** Validated echocardiogram tensor meeting adequacy threshold<br/>**Output:** Standardized cardiac view classification (`A4C`, `PL`, `PSAV`, `PSMV`, `SC`) and downstream analytical features |
+| **M3. Quality Assessment** | Estimate continuous image quality grade using expert annotations or proxy features. | `QualityAssessorNet` (CNN regressor) / `_proxy_quality` (physics fallback) | **Input:** Standardized tensor or 7 sector-masked physics features<br/>**Output:** Continuous scalar quality grade Q in [0.0, 9.0] |
+| **M4. Adequacy Estimator** | Predict downstream task error or whether task execution falls within defined clinical tolerance. | `AdequacyEstimator` (calibrated logistic regressor on out-of-fold validation targets) | **Input:** Quality score Q, Top-1 confidence, Top-2 margin, predictive Shannon entropy H<br/>**Output:** Task adequacy probability P(Adequate) in [0.0, 1.0] |
+| **M5. Cause Classifier** | Identify supported image-quality root causes and report diagnosis confidence. | `CauseClassifier` (Random Forest on sector-masked physics features + rule fallbacks) | **Input:** 7 sector-masked physics features (luminance, saturation, sharpness, drop-out, coverage)<br/>**Output:** Diagnosed fault (under_gain, over_gain, shadow, motion_blur, off_axis, none) & confidence score |
+| **M6. Guidance Mapper** | Map sufficiently confident, supported causes to candidate reacquisition suggestions. | `ReacquisitionPolicy.SUGGESTIONS` mapping engine | **Input:** Diagnosed acoustic fault with confidence >= 0.60<br/>**Output:** Actionable probe / ultrasound machine manipulation instructions |
+| **M7. Decision Policy** | Choose accept, reacquire, or refer based on validated thresholds and confidence. | `ReacquisitionPolicy.evaluate` | **Input:** P(Adequate), diagnosed fault, fault confidence, attempt counter k<br/>**Output:** Three-way guarded triage: `[ACCEPT]`, `[REACQUIRE]`, or `[REFER]` |
+| **M8. Re-Check Loop** | Evaluate successive simulated images, enforce attempt bounds, and stop safely. | `ClosedLoopSimulator` (leakage-free closed-loop execution engine) | **Input:** Base image, initial fault, operator recovery model (severity step = 0.5)<br/>**Output:** Full simulation trajectory and audit telemetry |
+
+---
+
+### 3.2 End-to-End Decision Flow
 
 ```mermaid
 flowchart TD
-    subgraph S1["1. Ingestion & Preprocessing"]
-        RAW["Raw Echocardiogram Frame<br/>(Full HD 1920x1080)"] --> VAL["Resolution & Safety Check<br/>(resolve_safe_path)"]
-        VAL --> PREPROC["Standardized Transforms<br/>(Resize 224x224, Norm, No Flip)"]
-    end
-
-    subgraph S2["2. Deep Learning Feature Extraction"]
-        PREPROC --> M1["Module M1: View Recognition<br/>(CardiacEchoNet / Logistic Baseline)"]
-        PREPROC --> M3["Module M3: Quality Assessment<br/>(QualityAssessorNet - Grade 0-9)"]
-        
-        M1 --> VPROB["View Probabilities & Confidence<br/>(A4C, PL, PSAV, PSMV, SC, Random)"]
-        M3 --> QSCORE["Predicted Quality Grade<br/>(Completeness & Clarity Score)"]
-    end
-
-    subgraph S3["3. Task Adequacy Prediction (M4)"]
-        VPROB --> M4["Module M4: Adequacy Estimator<br/>(Calibrated Logistic Regression on OOF Targets)"]
-        QSCORE --> M4
-        M4 --> APROB["Task Adequacy Probability P(Adequate)"]
-    end
-
-    subgraph S4["4. Sector-Masked Fault Diagnosis (M5)"]
-        RAW --> SECTOR["Ultrasound Sector Cone Masking<br/>(Active acoustic field extraction)"]
-        SECTOR --> FEAT["Physics Feature Extraction<br/>(Inner sharpness, lateral drop-out, luminance)"]
-        FEAT --> M5["Module M5: Cause Classifier<br/>(RandomForest / Rule Fallback)"]
-        M5 --> FAULT["Diagnosed Acoustic Fault & Confidence<br/>(under_gain, motion_blur, shadow, off_axis, none)"]
-    end
-
-    subgraph S5["5. Reacquisition & Triage Policy (M6 / M7)"]
-        APROB --> M67["Module M6/M7: Decision Policy Engine"]
-        FAULT --> M67
-        ATTEMPT["Attempt Counter (k <= 3)"] --> M67
-
-        M67 -->|Adequacy >= 0.75| ACT_ACCEPT["[ACCEPT]<br/>Adequacy threshold met;<br/>Proceed to clinical analysis"]
-        M67 -->|Adequacy < 0.75 & Conf >= 0.60 & k <= 3| ACT_REACQUIRE["[REACQUIRE]<br/>Targeted Physical Guidance<br/>(e.g., 'Increase 2D gain / TGC')"]
-        M67 -->|Conf < 0.60 or k > 3 or Unknown| ACT_REFER["[REFER]<br/>Safe Clinical Abstention<br/>(Max attempts reached or ambiguous fault)"]
-    end
-
-    subgraph S6["6. Closed-Loop Simulator (M8)"]
-        ACT_REACQUIRE --> M8["Module M8: Closed-Loop Re-check Simulator"]
-        M8 -->|Simulated Operator Maneuver| RAW
-    end
-
+    %% Styling Definitions
     classDef input fill:#e1f5fe,stroke:#0288d1,stroke-width:2px;
     classDef model fill:#ede7f6,stroke:#512da8,stroke-width:2px;
     classDef policy fill:#fff3e0,stroke:#f57c00,stroke-width:2px;
+    classDef downstream fill:#e8eaf6,stroke:#303f9f,stroke-width:2px;
     classDef action fill:#e8f5e9,stroke:#388e3c,stroke-width:2px;
     classDef danger fill:#ffebee,stroke:#d32f2f,stroke-width:2px;
 
-    class RAW,VAL,PREPROC input;
-    class M1,M3,M4,M5,VPROB,QSCORE,APROB,FAULT,SECTOR,FEAT model;
-    class M67,ATTEMPT policy;
+    %% S1: Ingestion & Preprocessing (M1)
+    subgraph S1["1. Module M1: Preprocessing & View Recognition"]
+        RAW["Raw Echocardiogram Frame<br/>(Full HD 1920x1080 RGB)"] --> VAL["Resolution & Safety Validation<br/>(resolve_safe_path)"]
+        VAL --> SECTOR["Acoustic Sector Cone Masking<br/>(Active acoustic field extraction)"]
+        VAL --> PREPROC["Standardized Transforms<br/>(Resize 224x224, Norm, No Flip)"]
+        PREPROC --> M1_VIEW["View Screening & Recognition<br/>(CardiacEchoNet / Logistic Baseline)"]
+        M1_VIEW --> VPROB["Candidate View Probabilities<br/>(A4C, PL, PSAV, PSMV, SC, Random)"]
+    end
+
+    %% S2: Quality Assessment (M3)
+    subgraph S2["2. Module M3: Quality Assessment"]
+        PREPROC --> M3["QualityAssessorNet Regressor<br/>(Continuous Grade 0 - 9)"]
+        SECTOR --> PROXY_Q["Proxy Acoustic Quality Fallback<br/>(Sharpness, Saturation, Drop-out, Coverage)"]
+        M3 --> QSCORE["Predicted Quality Grade Q<br/>(Completeness & Clarity Score)"]
+        PROXY_Q -.->|Standalone Mode| QSCORE
+    end
+
+    %% S3: Task Adequacy Estimation (M4)
+    subgraph S3["3. Module M4: Adequacy Estimator"]
+        VPROB --> FEAT_ADEQ["Adequacy Feature Extraction<br/>(Quality Q, Top-1 Conf, Margin, Shannon Entropy)"]
+        QSCORE --> FEAT_ADEQ
+        FEAT_ADEQ --> M4["Adequacy Estimator<br/>(Calibrated Logistic Regression on OOF Targets)"]
+        M4 --> APROB["Task Adequacy Probability P(Adequate)<br/>(Predicts if Downstream Task M2 will be reliable)"]
+    end
+
+    %% S4: Acoustic Cause Classification (M5)
+    subgraph S4["4. Module M5: Cause Classifier"]
+        SECTOR --> FEAT_PHYS["Sector-Masked Physics Feature Extractor<br/>(Luminance, Saturation, Column Drop-out, Radial Gradient)"]
+        FEAT_PHYS --> M5["Cause Classifier<br/>(Random Forest / Calibrated Rule Fallbacks)"]
+        M5 --> FAULT["Diagnosed Acoustic Fault & Confidence<br/>(under_gain, over_gain, shadow, motion_blur, off_axis, none)"]
+    end
+
+    %% S5: Decision Policy Engine (M7)
+    subgraph S5["5. Module M7: Decision Policy Engine"]
+        APROB --> M7{"Triage Policy Evaluation<br/>(tau_adeq = 0.75, tau_conf = 0.60, k_max = 3)"}
+        FAULT --> M7
+        ATTEMPT["Attempt Counter (k <= 3)"] --> M7
+
+        M7 -->|P(Adequate) >= 0.75| ACT_ACCEPT["[ACCEPT]<br/>Adequacy Threshold Met"]
+        M7 -->|P(Adequate) < 0.75 & Conf >= 0.60 & k <= 3| ACT_REACQUIRE["[REACQUIRE]<br/>Targeted Correction Required"]
+        M7 -->|Conf < 0.60 or k > 3 or Unknown| ACT_REFER["[REFER]<br/>Safe Clinical Abstention / Referral"]
+    end
+
+    %% S6: Downstream Task Model (M2)
+    subgraph S6["6. Module M2: Downstream Task Model"]
+        ACT_ACCEPT --> M2["Downstream Cardiac Task Execution<br/>(Full CardiacEchoNet Diagnostic Analysis)"]
+        M2 --> CLINICAL_OUT["Validated Cardiac View Output<br/>(Standard View Verified & Ready for Clinical Review)"]
+    end
+
+    %% S7: Guidance Mapper (M6)
+    subgraph S7["7. Module M6: Guidance Mapper"]
+        ACT_REACQUIRE --> M6["Reacquisition Guidance Engine<br/>(Maps Confident Physical Cause to Specific Maneuver)"]
+        FAULT --> M6
+        M6 --> SUGGEST["Actionable Operator Suggestion<br/>• under_gain: 'Increase 2D gain / TGC'<br/>• over_gain: 'Decrease 2D gain / resolve washout'<br/>• shadow: 'Reposition probe / adjust intercostal window'<br/>• motion_blur: 'Stabilize probe / suspend respiration'<br/>• off_axis: 'Re-align probe to orthogonal standard axis'"]
+    end
+
+    %% S8: Closed-Loop Re-Check Simulation (M8)
+    subgraph S8["8. Module M8: Closed-Loop Re-Check Simulator"]
+        SUGGEST --> M8["ClosedLoopSimulator Engine<br/>(k = k + 1, Enforce Attempt Bounds)"]
+        M8 --> SIM_MANEUVER["Simulate Operator Adjustment<br/>(Controlled Severity Reduction / Persistence)"]
+        SIM_MANEUVER -->|Successive Acquired Frame| RAW
+    end
+
+    %% Class Assignments
+    class RAW,VAL,SECTOR,PREPROC input;
+    class M1_VIEW,VPROB,M3,QSCORE,FEAT_ADEQ,M4,APROB,FEAT_PHYS,M5,FAULT,PROXY_Q model;
+    class M7,ATTEMPT policy;
+    class M2,CLINICAL_OUT downstream;
+    class M6,SUGGEST policy;
+    class M8,SIM_MANEUVER action;
     class ACT_ACCEPT action;
     class ACT_REACQUIRE policy;
     class ACT_REFER danger;
 ```
 
-### 3.2 Package File Organization
+---
+
+### 3.3 Package File Organization
 
 ```
 Self_Check_Ultrasound/
+├── ARCHITECTURE.md                # Formal system architecture, 8-module matrix & specifications
 ├── self_check_ultrasound/
 │   ├── config.py                  # Central configuration (paths, seeds, policy thresholds)
 │   ├── data/
 │   │   ├── manifest.py            # Dataset discovery & metadata parser (all 37,736 files)
 │   │   ├── splits.py              # Sequence-aware group-stratified splitting & coverage check
-│   │   ├── transforms.py          # Standardized preprocessing (no horizontal flips)
-│   │   ├── degradations.py        # Calibrated image-space fault generators (6 modes)
-│   │   └── dataset.py             # PyTorch Dataset loader with path-traversal protection
+│   │   ├── transforms.py          # M1: Preprocessing transforms (no horizontal flips)
+│   │   ├── degradations.py        # M8: Calibrated image-space fault generators (6 modes)
+│   │   └── dataset.py             # M1: PyTorch Dataset loader with path-traversal protection
 │   ├── models/
-│   │   ├── view_classifier.py     # M1: View recognition (CardiacEchoNet & Logistic)
+│   │   ├── view_classifier.py     # M1 / M2: View recognition & downstream task (CardiacEchoNet)
 │   │   ├── quality_assessor.py    # M3: Expert quality grade regression (QualityAssessorNet)
 │   │   ├── adequacy_estimator.py  # M4: Task adequacy prediction (calibrated & heuristic)
 │   │   └── cause_classifier.py    # M5: Sector-masked acoustic fault classifier
 │   ├── guidance/
-│   │   ├── reacquisition_policy.py# M6/M7: Triage policy (Accept / Reacquire / Refer)
+│   │   ├── reacquisition_policy.py# M6 / M7: Guidance mapper & triage decision policy engine
 │   │   └── simulator.py           # M8: Closed-loop re-check simulator (leakage-free)
 │   ├── visualization/
 │   │   └── plots.py               # Publication-grade figures & style tokens (300 DPI)
@@ -127,8 +176,8 @@ Self_Check_Ultrasound/
 │       └── eval_utils.py          # Bootstrap 95% CIs and paired difference tests
 ├── scripts/
 │   ├── build_manifest.py          # Generates dataset_manifest.csv & leakage-free splits.csv
-│   ├── train_view_baseline.py     # Trains & evaluates view baselines on TEST with bootstrap CIs
-│   ├── train_quality_baseline.py  # Trains & evaluates quality baselines on TEST with bootstrap CIs
+│   ├── train_view_baseline.py     # M1/M2: Trains & evaluates view baselines on TEST with bootstrap CIs
+│   ├── train_quality_baseline.py  # M3: Trains & evaluates quality baselines on TEST with bootstrap CIs
 │   ├── train_adequacy.py          # M4: Fits task-specific adequacy on out-of-fold validation targets
 │   ├── evaluate_cause_classifier.py # M5: Evaluates cause classifier on held-out synthetic & real grades
 │   ├── run_simulation.py          # M8: Executes canonical closed-loop reacquisition trajectories
