@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "self-check-ultrasound"
+version = "1.0.0"
+description = "ImageQuality-Aware Diagnosis and Reacquisition Guidance for Cardiac Ultrasound"
+readme = "README.md"
+authors = [
+    { name = "Anivesh Gupta" }
+]
+license = { text = "CC BY 4.0" }
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+keywords = ["echocardiography", "ultrasound", "quality-control", "reacquisition", "machine-learning"]
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.0.0",
+    "torchvision>=0.15.0",
+    "numpy>=1.24.0",
+    "pandas>=2.2.0",
+    "Pillow>=9.5.0",
+    "scikit-learn>=1.3.0",
+    "scipy>=1.11.0",
+    "joblib>=1.3.0",
+    "matplotlib>=3.7.0",
+    "tqdm>=4.65.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pip-audit>=2.6.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/AniveshGuptaOfficial/Self_Check_Ultrasound"
+Repository = "https://github.com/AniveshGuptaOfficial/Self_Check_Ultrasound.git"
+
+[tool.setuptools.packages.find]
+include = ["self_check_ultrasound*"]

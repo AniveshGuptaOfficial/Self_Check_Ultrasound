@@ -181,7 +181,8 @@ Self_Check_Ultrasound/
 │   ├── generate_research_plots.py # Generates Figures 1-5 in artifacts/figures/
 │   └── benchmark_performance.py   # M1-M8: Computational runtime latency & memory benchmarking
 ├── tests/                         # Comprehensive 57-test automated suite (100% pass)
-└── requirements.txt               # Lower-bounded Python dependencies
+├── requirements.txt               # Lower-bounded Python dependencies
+└── pyproject.toml                 # Standard packaging configuration (v1.0.0)
 ```
 
 ---
@@ -258,8 +259,9 @@ Evaluated on local CPU hardware (`AMD Ryzen 5`, 8 logical cores, PyTorch 2.14.0+
 git clone https://github.com/AniveshGuptaOfficial/Self_Check_Ultrasound.git
 cd Self_Check_Ultrasound
 
-# Install dependencies
+# Install dependencies and local package in editable mode
 python -m pip install -r requirements.txt
+python -m pip install -e .
 ```
 
 ### 2. Generate Manifest & Sequence Splits

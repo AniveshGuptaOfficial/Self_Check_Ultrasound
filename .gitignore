@@ -18,6 +18,12 @@ output1.txt
 # PyTest
 .pytest_cache/
 
+# Packaging / distribution
+build/
+dist/
+*.egg-info/
+*.egg
+
 # OS specific
 Thumbs.db
 ehthumbs.db
