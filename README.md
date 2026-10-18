@@ -39,9 +39,6 @@ This project utilizes the **CACTUS** open dataset ([Elmekki et al., 2025](https:
 
 The system is organized into eight modular, decoupled subsystems (**M1–M8**) coordinating deep learning view classification, continuous quality estimation, out-of-fold task adequacy prediction, sector-masked physical fault diagnosis, actionable operator guidance, and confidence-gated policy triage.
 
-> [!NOTE]
-> For a full mathematical formulation, sequence diagram, and formal interface definitions, see the complete technical document: [ARCHITECTURE.md](file:///c:/Users/Anivesh/OneDrive/Desktop/Special%20Project/Special%20Project/Self_Check_Ultrasound/ARCHITECTURE.md).
-
 ### 3.1 The 8-Module Architectural Matrix
 
 | Module | Core Responsibility | Model / Component | Inputs & Outputs |
@@ -150,7 +147,6 @@ flowchart TD
 
 ```
 Self_Check_Ultrasound/
-├── ARCHITECTURE.md                # Formal system architecture, 8-module matrix & specifications
 ├── self_check_ultrasound/
 │   ├── config.py                  # Central configuration (paths, seeds, policy thresholds)
 │   ├── data/
@@ -166,7 +162,7 @@ Self_Check_Ultrasound/
 │   │   └── cause_classifier.py    # M5: Sector-masked acoustic fault classifier
 │   ├── guidance/
 │   │   ├── reacquisition_policy.py# M6 / M7: Guidance mapper & triage decision policy engine
-│   │   └── simulator.py           # M8: Closed-loop re-check simulator (leakage-free)
+│   │   └── simulator.py           # M8: Closed-Loop re-check simulator (leakage-free)
 │   ├── visualization/
 │   │   └── plots.py               # Publication-grade figures & style tokens (300 DPI)
 │   └── utils/
@@ -184,8 +180,7 @@ Self_Check_Ultrasound/
 │   ├── interactive_demo.py        # Interactive CLI demo for testing individual echo frames
 │   └── generate_research_plots.py # Generates Figures 1-5 in artifacts/figures/
 ├── tests/                         # Comprehensive 56-test automated suite (100% pass)
-├── requirements.txt               # Lower-bounded Python dependencies
-└── CITATION.md                    # Formal academic attribution & CC BY 4.0 terms
+└── requirements.txt               # Lower-bounded Python dependencies
 ```
 
 ---
@@ -326,4 +321,4 @@ If you use this codebase or the CACTUS dataset in your research, please cite:
 
 ## 9. License
 
-This repository is distributed under the [CC BY 4.0 License](https://creativecommons.org/licenses/by/4.0/) in accordance with the underlying CACTUS dataset distribution. See [CITATION.md](CITATION.md) for details.
+This repository is distributed under the [CC BY 4.0 License](https://creativecommons.org/licenses/by/4.0/) in accordance with the underlying CACTUS dataset distribution (academic attribution to Elmekki et al., 2025).
