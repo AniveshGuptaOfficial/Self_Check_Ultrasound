@@ -23,6 +23,7 @@ build/
 dist/
 *.egg-info/
 *.egg
+self_check_ultrasound-*/
 
 # IDE & editor settings
 .vscode/

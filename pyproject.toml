@@ -10,7 +10,7 @@ readme = "README.md"
 authors = [
     { name = "Anivesh Gupta" }
 ]
-license = { text = "CC BY 4.0" }
+license = "CC-BY-4.0"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
