@@ -1,12 +1,43 @@
 """
 Sequence-aware, group-stratified dataset splitting for CACTUS cardiac ultrasound.
 Ensures zero data leakage of adjacent frames from the same acquisition run.
+
+Known limitation: a sequence group is (view, depth/DR/video tag, version). A view with very
+few groups (e.g. the `Random` class if all its files map to one tag per version) cannot be
+spread over three splits without breaking group isolation. `check_split_coverage` reports
+this instead of hiding it.
 """
 
+import warnings
 from pathlib import Path
-from typing import Optional
+from typing import Dict, List, Optional
 import numpy as np
 import pandas as pd
+
+SPLIT_NAMES = ("train", "val", "test")
+
+
+def check_split_coverage(splits_df: pd.DataFrame) -> Dict[str, object]:
+    """
+    Reports, per view class, the number of images and sequence groups in each split and
+    lists problems: a view missing from a split, or a view with fewer than 3 groups.
+    """
+    table: Dict[str, Dict[str, Dict[str, int]]] = {}
+    problems: List[str] = []
+    for view in sorted(splits_df["view_class"].unique()):
+        vdf = splits_df[splits_df["view_class"] == view]
+        table[view] = {}
+        for s in SPLIT_NAMES:
+            sdf = vdf[vdf["split"] == s]
+            table[view][s] = {"images": int(len(sdf)), "groups": int(sdf["sequence_group"].nunique())}
+            if len(sdf) == 0:
+                problems.append(f"view '{view}' has no images in split '{s}'")
+        if vdf["sequence_group"].nunique() < 3:
+            problems.append(
+                f"view '{view}' has only {vdf['sequence_group'].nunique()} sequence group(s); "
+                "group-isolated 3-way split is impossible"
+            )
+    return {"table": table, "problems": problems, "ok": len(problems) == 0}
 
 
 def create_sequence_aware_splits(
@@ -28,13 +59,11 @@ def create_sequence_aware_splits(
     df = manifest_df.copy()
     df["split"] = "unassigned"
 
-    # Split within each view class to maintain class balance
     for view_class in sorted(df["view_class"].unique()):
         class_df = df[df["view_class"] == view_class]
         group_counts = class_df.groupby("sequence_group").size().to_dict()
         groups = list(group_counts.keys())
 
-        # Shuffle with seed and sort descending by size to pack largest groups first
         rng.shuffle(groups)
         groups.sort(key=lambda g: group_counts[g], reverse=True)
 
@@ -48,12 +77,10 @@ def create_sequence_aware_splits(
 
         for g in groups:
             count = group_counts[g]
-            # Pick the split whose current count is farthest below its target proportion
             best_split = min(targets.keys(), key=lambda s: current[s] / targets[s])
             current[best_split] += count
             df.loc[df["sequence_group"] == g, "split"] = best_split
 
-    # Validation check: verify strict disjointness of sequence_group between splits
     train_seqs = set(df[df["split"] == "train"]["sequence_group"])
     val_seqs = set(df[df["split"] == "val"]["sequence_group"])
     test_seqs = set(df[df["split"] == "test"]["sequence_group"])
@@ -65,6 +92,10 @@ def create_sequence_aware_splits(
     assert len(overlap_train_val) == 0, f"Leakage detected between train and val: {overlap_train_val}"
     assert len(overlap_train_test) == 0, f"Leakage detected between train and test: {overlap_train_test}"
     assert len(overlap_val_test) == 0, f"Leakage detected between val and test: {overlap_val_test}"
+
+    coverage = check_split_coverage(df)
+    for p in coverage["problems"]:
+        warnings.warn(f"Split coverage: {p}", stacklevel=2)
 
     if output_path:
         output_path = Path(output_path)

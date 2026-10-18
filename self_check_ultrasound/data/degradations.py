@@ -6,6 +6,10 @@ Simulates common operator and acquisition faults:
 - Acoustic shadowing (rib / calcification drop-out)
 - Transducer motion blur
 - Out-of-plane / off-axis misplacement
+
+NOTE: these are simple image-space proxies (brightness, blur, stripe, crop),
+not physical acoustic simulations. `off_axis` is a crop/zoom, not a true change
+of probe geometry.
 """
 
 from typing import Tuple, Dict, Any, Optional
@@ -51,7 +55,7 @@ class SyntheticDegradationPipeline:
         severity: float between 0.1 (mild) and 1.0 (severe).
         """
         if degradation_type is None:
-            degradation_type = self.rng.choice(self.SUPPORTED_DEGRADATIONS)
+            degradation_type = str(self.rng.choice(self.SUPPORTED_DEGRADATIONS))
 
         if degradation_type not in self.SUPPORTED_DEGRADATIONS:
             raise ValueError(f"Unknown degradation type: {degradation_type}")
@@ -67,29 +71,21 @@ class SyntheticDegradationPipeline:
             }
 
         elif degradation_type == "under_gain":
-            # Scale brightness down: 1.0 -> 0.1
             factor = max(0.1, 1.0 - (0.85 * severity))
-            enhancer = ImageEnhance.Brightness(img)
-            img = enhancer.enhance(factor)
+            img = ImageEnhance.Brightness(img).enhance(factor)
 
         elif degradation_type == "over_gain":
-            # Scale brightness and contrast up, blowing out speckle
             factor = 1.0 + (1.8 * severity)
-            enhancer = ImageEnhance.Brightness(img)
-            img = enhancer.enhance(factor)
-            contrast_enhancer = ImageEnhance.Contrast(img)
-            img = contrast_enhancer.enhance(1.0 + (0.5 * severity))
+            img = ImageEnhance.Brightness(img).enhance(factor)
+            img = ImageEnhance.Contrast(img).enhance(1.0 + (0.5 * severity))
 
         elif degradation_type == "motion_blur":
-            # Gaussian blur with radius proportional to severity
             radius = 1.0 + (6.0 * severity)
             img = img.filter(ImageFilter.GaussianBlur(radius=radius))
 
         elif degradation_type == "acoustic_shadow":
-            # Dark vertical stripe or wedge simulating rib acoustic shadow
             arr = np.array(img).astype(np.float32)
             h, w = arr.shape[:2]
-            # Center of the shadow band
             center_x = int(w * (0.3 + 0.4 * self.rng.rand()))
             width = int(w * (0.08 + 0.15 * severity))
             x_min = max(0, center_x - width // 2)
@@ -100,7 +96,6 @@ class SyntheticDegradationPipeline:
             img = Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8))
 
         elif degradation_type == "off_axis":
-            # Crop away outer structural landmarks and zoom/shift
             w, h = img.size
             crop_ratio = 1.0 - (0.25 * severity)
             new_w, new_h = int(w * crop_ratio), int(h * crop_ratio)

@@ -3,11 +3,17 @@ Task-Specific Adequacy Estimator (Module M4).
 Estimates whether an image's quality and acoustic representations are sufficient
 for reliable downstream cardiac view analysis.
 
-Trained on held-out out-of-fold downstream performance to prevent in-sample overfitting.
+Two modes:
+- FITTED: logistic regression trained by scripts/train_adequacy.py on held-out
+  (out-of-fold, sequence-group-aware) downstream outcomes, then saved with .save().
+- HEURISTIC (is_fitted == False): fixed fallback 0.4*quality/9 + 0.6*confidence. This is NOT
+  a learned or calibrated probability; results produced in this mode must be labelled as such.
 """
 
-from typing import Dict, Any, Optional
+from pathlib import Path
+from typing import Union
 import numpy as np
+import joblib
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from scipy.stats import entropy
@@ -16,9 +22,11 @@ from scipy.stats import entropy
 class AdequacyEstimator:
     """
     Predicts binary task-specific adequacy P(Adequate | Features).
-    Adequacy is defined by whether the downstream model predicts the correct cardiac view
-    with high confidence and low entropy.
+    Adequacy target (see scripts/train_adequacy.py): the downstream view classifier
+    predicts the correct cardiac view for the frame.
     """
+
+    FEATURE_NAMES = ("predicted_quality", "top1_confidence", "top2_margin", "entropy")
 
     def __init__(self, adequacy_threshold: float = 0.70):
         self.adequacy_threshold = adequacy_threshold
@@ -47,7 +55,6 @@ class AdequacyEstimator:
         sorted_probs = np.sort(view_probabilities, axis=1)
         margin = (sorted_probs[:, -1] - sorted_probs[:, -2]).reshape(-1, 1)
 
-        # Numerical safety for entropy
         safe_probs = np.clip(view_probabilities, 1e-7, 1.0)
         ent = entropy(safe_probs, axis=1).reshape(-1, 1)
 
@@ -56,20 +63,17 @@ class AdequacyEstimator:
         return np.hstack([q_feat, conf, margin, ent])
 
     def fit(self, X_features: np.ndarray, y_adequacy_targets: np.ndarray) -> None:
-        """
-        Fits the adequacy model on out-of-fold validation targets.
-        """
+        """Fits the adequacy model on held-out (out-of-fold) adequacy targets."""
         X_scaled = self.scaler.fit_transform(X_features)
         self.clf.fit(X_scaled, y_adequacy_targets)
         self.is_fitted = True
 
     def predict_probability(self, X_features: np.ndarray) -> np.ndarray:
         """
-        Outputs calibrated probability of adequacy P(Adequate = 1).
+        Probability of adequacy P(Adequate = 1) (fitted mode), or the heuristic score
+        (unfitted mode; not calibrated).
         """
         if not self.is_fitted:
-            # Heuristic fallback before fitting: calibrated combination of quality and confidence
-            # Quality scaled to [0, 1] + Confidence
             q_norm = np.clip(X_features[:, 0] / 9.0, 0.0, 1.0)
             conf = X_features[:, 1]
             return 0.4 * q_norm + 0.6 * conf
@@ -80,3 +84,22 @@ class AdequacyEstimator:
     def is_adequate(self, X_features: np.ndarray) -> np.ndarray:
         probs = self.predict_probability(X_features)
         return probs >= self.adequacy_threshold
+
+    # ---- persistence (sklearn objects only; load with joblib from trusted local files) ----
+    def save(self, path: Union[str, Path]) -> None:
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        joblib.dump(
+            {"scaler": self.scaler, "clf": self.clf, "threshold": self.adequacy_threshold,
+             "is_fitted": self.is_fitted},
+            path,
+        )
+
+    @classmethod
+    def load(cls, path: Union[str, Path]) -> "AdequacyEstimator":
+        state = joblib.load(path)
+        est = cls(adequacy_threshold=state["threshold"])
+        est.scaler = state["scaler"]
+        est.clf = state["clf"]
+        est.is_fitted = state["is_fitted"]
+        return est

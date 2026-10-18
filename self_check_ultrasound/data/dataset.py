@@ -10,11 +10,16 @@ import torch
 from torch.utils.data import Dataset
 
 from ..config import default_config
+from ..utils.paths import resolve_safe_path
 
 
 class CardiacUltrasoundDataset(Dataset):
     """
     Loads cardiac ultrasound images from the manifest DataFrame.
+
+    NOTE: when a degradation pipeline is active, `quality_grade` is still the ORIGINAL
+    expert grade of the clean frame. Use the returned `degraded` flag to exclude degraded
+    samples from quality-regression losses/metrics.
     """
 
     def __init__(
@@ -36,9 +41,8 @@ class CardiacUltrasoundDataset(Dataset):
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         row = self.df.iloc[idx]
-        image_path = (self.dataset_root / row["relative_path"]).resolve()
-        if not str(image_path).startswith(str(self.dataset_root.resolve())):
-            raise ValueError(f"Path traversal detected: {image_path} is outside {self.dataset_root}")
+        # Raises ValueError("Path traversal detected ...") if the path escapes dataset_root.
+        image_path = resolve_safe_path(self.dataset_root, row["relative_path"])
 
         if not image_path.exists():
             raise FileNotFoundError(f"Image file does not exist: {image_path}")
@@ -63,4 +67,5 @@ class CardiacUltrasoundDataset(Dataset):
             "filename": str(row["filename"]),
             "sequence_group": str(row["sequence_group"]),
             "degradation": degradation_meta,
+            "degraded": degradation_meta.get("degradation_type", "none") != "none",
         }

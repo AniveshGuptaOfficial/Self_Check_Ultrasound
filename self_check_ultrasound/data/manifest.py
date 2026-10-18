@@ -1,6 +1,10 @@
 """
 Dataset discovery and manifest creation for CACTUS cardiac ultrasound dataset.
 Parses view labels, expert quality grades, acquisition parameters, and sequence groups.
+
+Image dimensions / channels / validity are recorded ONLY when validate_images=True
+(images are actually opened). Otherwise those columns are left empty (NaN), so the
+manifest never claims verification that did not happen.
 """
 
 import os
@@ -10,7 +14,7 @@ from typing import Dict, Any, Optional
 import pandas as pd
 from PIL import Image
 
-from ..config import default_config, PathConfig, DataConfig
+from ..config import default_config
 
 
 def parse_image_filename(filename: str, view_class: str) -> Dict[str, Any]:
@@ -26,7 +30,6 @@ def parse_image_filename(filename: str, view_class: str) -> Dict[str, Any]:
     stem = Path(filename).stem
     parts = stem.split("_")
 
-    # Grade is the first numeric token
     grade = int(parts[0]) if parts[0].isdigit() else 0
 
     depth_tag = None
@@ -35,7 +38,6 @@ def parse_image_filename(filename: str, view_class: str) -> Dict[str, Any]:
     version_tag = "v1"
     frame_num = -1
 
-    # Check last token for version (e.g. v2)
     tokens_to_process = parts[1:]
     if tokens_to_process and re.match(r"^v\d+$", tokens_to_process[-1], re.IGNORECASE):
         version_tag = tokens_to_process[-1].lower()
@@ -61,7 +63,6 @@ def parse_image_filename(filename: str, view_class: str) -> Dict[str, Any]:
         if m_f:
             frame_num = int(m_f.group(1))
 
-    # Form cohesive sequence group key
     tag = depth_tag or dr_tag or video_tag or "BASE"
     sequence_group = f"{view_class}_{tag}_{version_tag}"
 
@@ -85,6 +86,9 @@ def build_manifest(
 ) -> pd.DataFrame:
     """
     Scans the dataset directory, parses metadata, and generates a structured manifest DataFrame.
+
+    validate_images=True opens every image and records true width/height/channels and
+    is_valid. validate_images=False leaves those columns empty (NaN / None).
     """
     dataset_dir = Path(dataset_dir or default_config.paths.dataset_dir)
     output_path = Path(output_path or default_config.paths.manifest_path)
@@ -114,25 +118,28 @@ def build_manifest(
             if validate_images:
                 try:
                     with Image.open(full_path) as img:
+                        img.load()  # force a full decode so truncated files are caught
                         w, h = img.size
                         meta["width"] = w
                         meta["height"] = h
                         meta["channels"] = len(img.getbands())
                         meta["is_valid"] = True
                 except Exception as e:
+                    meta["width"] = None
+                    meta["height"] = None
+                    meta["channels"] = None
                     meta["is_valid"] = False
                     meta["error"] = str(e)
             else:
-                meta["width"] = default_config.data.raw_size[0]
-                meta["height"] = default_config.data.raw_size[1]
-                meta["channels"] = 3
-                meta["is_valid"] = True
+                meta["width"] = None
+                meta["height"] = None
+                meta["channels"] = None
+                meta["is_valid"] = None
 
             records.append(meta)
 
     df = pd.DataFrame(records)
 
-    # Save to artifacts directory
     output_path.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(output_path, index=False)
     print(f"Manifest successfully created: {len(df)} images saved to {output_path}")

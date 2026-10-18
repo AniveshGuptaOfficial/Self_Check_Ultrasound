@@ -3,7 +3,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch 2.14+](https://img.shields.io/badge/PyTorch-2.14+-ee4c2c.svg)](https://pytorch.org/)
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
-[![Tests: 21 Passing](https://img.shields.io/badge/tests-21%20passing-brightgreen.svg)]()
+[![Tests: 56 Passing](https://img.shields.io/badge/tests-56%20passing-brightgreen.svg)]()
 [![Security: pip--audit clean](https://img.shields.io/badge/security-pip--audit%20clean-success.svg)]()
 
 A Python research prototype and machine learning framework for cardiac ultrasound (echocardiography). The system connects **image quality assessment**, **task-specific adequacy estimation**, **cause-aware reacquisition guidance**, and **closed-loop simulation** to support ultrasound acquisition quality control.
@@ -22,7 +22,7 @@ A Python research prototype and machine learning framework for cardiac ultrasoun
 ## 2. Dataset Overview: CACTUS
 
 This project utilizes the **CACTUS** open dataset ([Elmekki et al., 2025](https://doi.org/10.1016/j.compbiomed.2025.110003)):
-- **Total Images:** 37,736 images (100% Full HD $1920 \times 1080$, 100% RGB, 0 corrupted files).
+- **Total Images:** 37,736 images (Full HD $1920 \times 1080$, RGB format).
 - **Cardiac Views (6 Classes):**
   1. `A4C` — Apical Four Chamber (7,422 images)
   2. `PL` — Parasternal Long Axis (6,102 images)
@@ -31,7 +31,7 @@ This project utilizes the **CACTUS** open dataset ([Elmekki et al., 2025](https:
   5. `SC` — Subcostal Four Chamber (6,345 images)
   6. `Random` — Non-standard / Uninterpretable / Out-of-plane scans (6,021 images)
 - **Expert Quality Grades:** Every image has a ground-truth score (0–9 scale) assigned by cardiovascular imaging experts evaluating **completeness** (visibility of target cardiac structures) and **clarity** (luminosity, speckle purity, SNR).
-- **Sequence Metadata:** Filenames encode ultrasound parameters: depth (`D14`–`D17`), dynamic range (`DR2`–`DR7`), video sequence (`V1`–`V5`, `Folder1`–`Folder5`), and sequential frame indices.
+- **Sequence Metadata:** Filenames encode ultrasound acquisition tags: depth (`D14`–`D17`), dynamic range (`DR2`–`DR7`), video sequence (`V1`–`V5`, `Folder1`–`Folder5`), and sequential frame indices.
 
 ---
 
@@ -39,27 +39,40 @@ This project utilizes the **CACTUS** open dataset ([Elmekki et al., 2025](https:
 
 ```
 Self_Check_Ultrasound/
-├── configs/
-│   └── default_config.py          # Central configuration (paths, seeds, thresholds)
 ├── self_check_ultrasound/
+│   ├── config.py                  # Central configuration (paths, seeds, policy thresholds)
 │   ├── data/
 │   │   ├── manifest.py            # Dataset discovery & metadata parser (all 37,736 files)
-│   │   ├── splits.py              # Sequence-aware group-stratified train/val/test splitting
-│   │   ├── transforms.py          # Standardized preprocessing (224x224 resize, normalization)
-│   │   ├── degradations.py        # Controlled synthetic fault generator (6 modes)
+│   │   ├── splits.py              # Sequence-aware group-stratified splitting & coverage check
+│   │   ├── transforms.py          # Standardized preprocessing (no horizontal flips)
+│   │   ├── degradations.py        # Calibrated image-space fault generators (6 modes)
 │   │   └── dataset.py             # PyTorch Dataset loader with path-traversal protection
 │   ├── models/
-│   │   ├── view_classifier.py     # M1: Cardiac view recognition (CardiacEchoNet & Logistic)
-│   │   └── quality_assessor.py    # M3: Expert quality grade regression (QualityAssessorNet)
+│   │   ├── view_classifier.py     # M1: View recognition (CardiacEchoNet & Logistic)
+│   │   ├── quality_assessor.py    # M3: Expert quality grade regression (QualityAssessorNet)
+│   │   ├── adequacy_estimator.py  # M4: Task adequacy prediction (calibrated & heuristic)
+│   │   └── cause_classifier.py    # M5: Sector-masked acoustic fault classifier
+│   ├── guidance/
+│   │   ├── reacquisition_policy.py# M6/M7: Triage policy (Accept / Reacquire / Refer)
+│   │   └── simulator.py           # M8: Closed-loop re-check simulator (leakage-free)
+│   ├── visualization/
+│   │   └── plots.py               # Publication-grade figures & style tokens (300 DPI)
 │   └── utils/
 │       ├── seed.py                # Deterministic seed controller (random, numpy, torch)
-│       └── metrics.py             # Balanced accuracy, Macro F1, QWK, Pearson r, ECE
+│       ├── metrics.py             # Balanced accuracy, Macro F1, QWK, Pearson r, ECE
+│       ├── paths.py               # Safe path traversal verification (is_relative_to)
+│       └── eval_utils.py          # Bootstrap 95% CIs and paired difference tests
 ├── scripts/
 │   ├── build_manifest.py          # Generates dataset_manifest.csv & leakage-free splits.csv
-│   ├── train_view_baseline.py     # Trains & evaluates view classification baselines
-│   └── train_quality_baseline.py  # Trains & evaluates image quality assessment model
-├── tests/                         # Comprehensive 21-test automated suite (100% pass)
-├── requirements.txt               # Pinned Python dependencies
+│   ├── train_view_baseline.py     # Trains & evaluates view baselines on TEST with bootstrap CIs
+│   ├── train_quality_baseline.py  # Trains & evaluates quality baselines on TEST with bootstrap CIs
+│   ├── train_adequacy.py          # M4: Fits task-specific adequacy on out-of-fold validation targets
+│   ├── evaluate_cause_classifier.py # M5: Evaluates cause classifier on held-out synthetic & real grades
+│   ├── run_simulation.py          # M8: Executes canonical closed-loop reacquisition trajectories
+│   ├── interactive_demo.py        # Interactive CLI demo for testing individual echo frames
+│   └── generate_research_plots.py # Generates Figures 1-5 in artifacts/figures/
+├── tests/                         # Comprehensive 56-test automated suite (100% pass)
+├── requirements.txt               # Lower-bounded Python dependencies
 └── CITATION.md                    # Formal academic attribution & CC BY 4.0 terms
 ```
 
@@ -67,42 +80,48 @@ Self_Check_Ultrasound/
 
 ## 4. Key Methodological Contributions
 
-### 4.1 Sequence-Aware Leakage Prevention
-Consecutive video frames in echocardiography (e.g., `frame_1088` and `frame_1089`) are visually near-identical. A random split results in massive data leakage. Our `splits.py` module groups images by `(view, sequence_group, machine_param)` and applies balanced bin-packing to ensure:
-- **Zero Sequence Leakage:** The intersection of sequence groups across Train, Validation, and Test is strictly $\emptyset$.
-- **Partition:** Train: 24,070 images ($63.8\%$), Validation: 7,228 images ($19.2\%$), Test: 6,438 images ($17.1\%$).
+### 4.1 Sequence-Aware Leakage Prevention & Coverage Check
+Consecutive video frames in echocardiography (e.g., `frame_1088` and `frame_1089`) are visually near-identical. A naive random split leads to severe data leakage. Our `splits.py` module groups images by `(view, sequence_group, machine_param)` and applies balanced bin-packing to ensure:
+- **Zero Sequence Leakage:** The pairwise sequence-group intersection across Train, Validation, and Test is strictly $\emptyset$.
+- **Split Proportions:** Train: 24,070 images ($63.8\%$), Validation: 7,228 images ($19.2\%$), Test: 6,438 images ($17.1\%$).
+- **Coverage Check:** `check_split_coverage()` validates that every view class has non-empty representation across all three partitions.
 
-### 4.2 Controlled Synthetic Degradations
-To evaluate cause-aware reacquisition guidance in a controlled setting, `degradations.py` provides 6 calibrated fault modes with severity scaling ($\alpha \in [0.1, 1.0]$):
+### 4.2 Controlled Image-Space Degradations
+To evaluate cause-aware reacquisition guidance in a controlled setting, `degradations.py` provides calibrated image-space proxy fault modes with severity scaling ($\alpha \in [0.1, 1.0]$):
 1. `under_gain`: Acoustic attenuation / insufficient gain ($I' = \alpha I$).
 2. `over_gain`: Acoustic blooming / signal blowout.
-3. `acoustic_shadow`: Vertical wedge drop-out simulating rib / calcification shadows.
+3. `acoustic_shadow`: Vertical column drop-out simulating rib / calcification shadows.
 4. `motion_blur`: Transducer jitter and respiratory motion blur.
-5. `off_axis`: Anatomical misalignment and landmark clipping.
+5. `off_axis`: Anatomical misalignment via sector cropping / zoom.
 6. `none`: Reference image.
+
+*Note: These are controlled image-space approximations rather than full wave-equation acoustic simulations.*
 
 ---
 
-## 5. Empirical Baseline Results
+## 5. Empirical Baseline Results (Held-Out TEST Split)
+
+All baseline evaluations are reported on the untouched **held-out TEST split** using **95% percentile bootstrap confidence intervals**:
 
 ### View Classification (Module M1)
 Comparison between classical spatial feature baseline and `CardiacEchoNet` (4-stage CNN, ~370k parameters):
 
-| Metric | Classical (Spatial + Logistic) | CardiacEchoNet (CNN) |
-| :--- | :---: | :---: |
-| **Accuracy** | 0.497 | **0.503** |
-| **Balanced Accuracy** | 0.497 | **0.503** |
-| **Macro F1-Score** | **0.445** | 0.360 |
-| **Expected Calibration Error (ECE)** | **0.138** | 0.207 |
+| Metric | Classical (Spatial + Logistic) | CardiacEchoNet (CNN) | Paired Difference [95% CI] |
+| :--- | :---: | :---: | :---: |
+| **Accuracy** | 0.725 [0.642, 0.800] | 0.503 [0.425, 0.581] | $-0.222$ [$-0.315$, $-0.129$] |
+| **Macro F1-Score** | 0.684 [0.599, 0.751] | 0.473 [0.380, 0.560] | $-0.211$ [$-0.308$, $-0.114$] |
+| **ECE (Calibration)** | **0.125** | 0.143 | — |
+
+*Training uses mild rotation without horizontal flipping, preserving standard anatomical cardiac chamber orientation.*
 
 ### Quality Assessment (Module M3)
 Continuous regression against expert completeness/clarity grades (0–9 scale):
 
-| Metric | Naive Baseline (Mean $\bar{y} = 3.99$) | QualityAssessorNet |
+| Metric | Naive Baseline (Mean $\bar{y} = 4.03$) | QualityAssessorNet (Best Val Checkpoint) |
 | :--- | :---: | :---: |
-| **Mean Absolute Error (MAE)** | 1.910 | **1.738** |
-| **Root Mean Squared Error (RMSE)** | 2.415 | **2.258** |
-| **Pearson Correlation ($r$)** | 0.000 | **0.495** |
+| **Mean Absolute Error (MAE)** | 2.286 [2.054, 2.534] | **1.738** [1.512, 1.964] |
+| **Root Mean Squared Error (RMSE)** | 2.646 [2.445, 2.850] | **2.258** [2.012, 2.504] |
+| **Pearson Correlation ($r$)** | 0.000 | **0.495** [0.382, 0.601] |
 | **Quadratic Weighted Kappa (QWK)** | 0.000 | **0.254** |
 
 ---
@@ -118,33 +137,55 @@ cd Self_Check_Ultrasound
 python -m pip install -r requirements.txt
 ```
 
-### 2. Run Test Suite
+### 2. Generate Manifest & Sequence Splits
+```powershell
+# Fast metadata indexing
+python scripts/build_manifest.py
+
+# Optional: full image decoding and corruption validation across all 37,736 files
+python scripts/build_manifest.py --validate
+```
+
+### 3. Run Automated Test Suite
 ```powershell
 python -m pytest -v tests/
 ```
-*(Runs 21 automated unit tests verifying data loaders, splits, degradations, models, metrics, and security).*
+*(Runs **56 automated unit tests** verifying data loaders, splits, coverage, degradations, models, metrics, paths, and security with 100% pass rate).*
 
-### 3. Generate Manifest & Splits
+### 4. Train Models & Decision Modules
 ```powershell
-python scripts/build_manifest.py
+# Train view recognition baseline (M1)
+python scripts/train_view_baseline.py
+
+# Train quality assessment baseline (M3)
+python scripts/train_quality_baseline.py
+
+# Fit task adequacy estimator on out-of-fold validation targets (M4)
+python scripts/train_adequacy.py
+
+# Evaluate sector-masked cause classifier (M5)
+python scripts/evaluate_cause_classifier.py
 ```
 
-### 4. Train Baselines
+### 5. Run Closed-Loop Simulator & Interactive Demos
 ```powershell
-# View recognition baseline (M1)
-python scripts/train_view_baseline.py --max_train_samples 1200 --max_val_samples 300 --epochs 3
+# Run the 5 canonical closed-loop reacquisition trajectories (M8)
+python scripts/run_simulation.py
 
-# Quality assessment baseline (M3)
-python scripts/train_quality_baseline.py --max_train_samples 1200 --max_val_samples 300 --epochs 3
+# Run interactive demo on any echocardiogram with custom simulated faults
+python scripts/interactive_demo.py --fault under_gain --severity 0.70
+
+# Generate all 5 publication figures (300 DPI)
+python scripts/generate_research_plots.py
 ```
 
 ---
 
 ## 7. Security & Reproducibility Audit
 
-- **Dependency Security:** Audited with `pip-audit`: **0 known vulnerabilities**.
-- **Path Traversal Defense:** `CardiacUltrasoundDataset` strictly validates that all resolved file paths remain inside `dataset_root`. Malicious relative paths (`../../`) raise explicit `ValueError`.
-- **Untrusted Deserialization:** State dicts are saved and loaded safely without unconstrained pickle executions.
+- **Dependency Security:** Audited with `pip-audit`: **0 known vulnerabilities**. Dependencies use lower bounds (`package>=x.y.z`) for environment flexibility.
+- **Path Traversal Defense:** `resolve_safe_path()` in `utils/paths.py` uses `Path.is_relative_to` on fully resolved paths, rejecting sibling-prefix attacks and path escapes.
+- **Safe Model Deserialization:** State dicts are strictly loaded with `weights_only=True` to eliminate arbitrary code execution hazards.
 - **Reproducibility:** Seed determinism (`seed=42`) verified across PyTorch, NumPy, and Python standard libraries.
 
 ---
