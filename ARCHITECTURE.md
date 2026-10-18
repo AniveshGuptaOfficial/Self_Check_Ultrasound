@@ -144,13 +144,13 @@ flowchart TD
 
     %% S5: Decision Policy Engine
     subgraph S5["5. Module M7: Decision Policy Engine"]
-        APROB --> M7{"Triage Policy Evaluation<br/>(tau_adeq = 0.75, tau_conf = 0.60, k_max = 3)"}
+        APROB --> M7["Triage Policy Evaluation<br/>(tau_adeq = 0.75, tau_conf = 0.60, k_max = 3)"]
         FAULT --> M7
         ATTEMPT["Attempt Counter (k <= 3)"] --> M7
 
-        M7 -->|P(Adequate) >= 0.75| ACT_ACCEPT["[ACCEPT]<br/>Adequacy Threshold Met"]
-        M7 -->|P(Adequate) < 0.75 & Conf >= 0.60 & k <= 3| ACT_REACQUIRE["[REACQUIRE]<br/>Targeted Correction Required"]
-        M7 -->|Conf < 0.60 or k > 3 or Unknown| ACT_REFER["[REFER]<br/>Safe Clinical Abstention / Referral"]
+        M7 -->|"Adequacy >= 0.75"| ACT_ACCEPT["[ACCEPT]<br/>Adequacy Threshold Met"]
+        M7 -->|"Adequacy < 0.75 and Conf >= 0.60 and k <= 3"| ACT_REACQUIRE["[REACQUIRE]<br/>Targeted Correction Required"]
+        M7 -->|"Conf < 0.60 or k > 3 or Unknown"| ACT_REFER["[REFER]<br/>Safe Clinical Abstention / Referral"]
     end
 
     %% S6: Downstream Task Model
@@ -163,7 +163,7 @@ flowchart TD
     subgraph S7["7. Module M6: Guidance Mapper"]
         ACT_REACQUIRE --> M6["Reacquisition Guidance Engine<br/>(Maps Confident Physical Cause to Specific Maneuver)"]
         FAULT --> M6
-        M6 --> SUGGEST["Actionable Operator Suggestion<br/>• under_gain: 'Increase 2D gain / TGC'<br/>• over_gain: 'Decrease 2D gain / resolve washout'<br/>• shadow: 'Reposition probe / adjust intercostal window'<br/>• motion_blur: 'Stabilize probe / suspend respiration'<br/>• off_axis: 'Re-align probe to orthogonal standard axis'"]
+        M6 --> SUGGEST["Actionable Operator Suggestion<br/>- under_gain: Increase 2D gain / TGC<br/>- over_gain: Decrease 2D gain / resolve washout<br/>- shadow: Reposition probe / adjust intercostal window<br/>- motion_blur: Stabilize probe / suspend respiration<br/>- off_axis: Re-align probe to orthogonal standard axis"]
     end
 
     %% S8: Closed-Loop Re-Check Simulation
