@@ -9,6 +9,7 @@ Usage:
 """
 
 import sys
+import copy
 import json
 import argparse
 from pathlib import Path
@@ -46,7 +47,10 @@ def train_cnn(model, train_loader, val_loader, epochs, lr, device, class_names):
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
 
     print(f"\n--- Training CardiacEchoNet on {device} ({epochs} epochs) ---")
-    best_val_f1 = 0.0
+    best_val_f1 = -1.0
+    best_state = None
+    best_metrics = None
+    best_preds, best_probs, best_targets = None, None, None
 
     for epoch in range(1, epochs + 1):
         model.train()
@@ -98,13 +102,24 @@ def train_cnn(model, train_loader, val_loader, epochs, lr, device, class_names):
         val_ece = calculate_ece(val_targets, val_probs)
         val_metrics["ece"] = val_ece
 
+        is_best = val_metrics["macro_f1"] > best_val_f1
+        if is_best:
+            best_val_f1 = val_metrics["macro_f1"]
+            best_state = copy.deepcopy(model.state_dict())
+            best_metrics = copy.deepcopy(val_metrics)
+            best_preds, best_probs, best_targets = val_preds, val_probs, val_targets
+
+        best_badge = " (*Best)" if is_best else ""
         print(
             f"Epoch {epoch:2d}/{epochs:2d} | "
             f"Train Loss: {epoch_loss:.4f} | Train Acc: {epoch_acc:.3f} | "
             f"Val BalAcc: {val_metrics['balanced_accuracy']:.3f} | "
-            f"Val MacroF1: {val_metrics['macro_f1']:.3f} | ECE: {val_ece:.3f}"
+            f"Val MacroF1: {val_metrics['macro_f1']:.3f} | ECE: {val_ece:.3f}{best_badge}"
         )
 
+    if best_state is not None:
+        model.load_state_dict(best_state)
+        return best_metrics, best_preds, best_probs, best_targets
     return val_metrics, val_preds, val_probs, val_targets
 
 

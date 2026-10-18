@@ -9,6 +9,7 @@ Usage:
 """
 
 import sys
+import copy
 import json
 import argparse
 from pathlib import Path
@@ -101,6 +102,10 @@ def main():
 
     print(f"\n--- Training QualityAssessorNet on {device} ({args.epochs} epochs) ---")
 
+    best_val_mae = float("inf")
+    best_state_dict = None
+    best_metrics = None
+
     for epoch in range(1, args.epochs + 1):
         model.train()
         train_loss = 0.0
@@ -134,23 +139,35 @@ def main():
         epoch_metrics = calculate_regression_metrics(y_val, epoch_val_preds)
         epoch_qwk = calculate_qwk(y_val, epoch_val_preds)
 
+        is_best = epoch_metrics["mae"] < best_val_mae
+        if is_best:
+            best_val_mae = epoch_metrics["mae"]
+            best_state_dict = copy.deepcopy(model.state_dict())
+            best_metrics = copy.deepcopy(epoch_metrics)
+            best_metrics["qwk"] = epoch_qwk
+
+        best_badge = " (*Best)" if is_best else ""
         print(
             f"Epoch {epoch:2d}/{args.epochs:2d} | "
             f"Train MSE: {epoch_loss:.4f} | "
             f"Val MAE: {epoch_metrics['mae']:.3f} | "
             f"Val RMSE: {epoch_metrics['rmse']:.3f} | "
             f"Pearson r: {epoch_metrics['pearson_r']:.3f} | "
-            f"QWK: {epoch_qwk:.3f}"
+            f"QWK: {epoch_qwk:.3f}{best_badge}"
         )
 
-    final_metrics = epoch_metrics
-    final_metrics["qwk"] = epoch_qwk
+    final_metrics = best_metrics if best_metrics is not None else epoch_metrics
+    if best_metrics is None:
+        final_metrics["qwk"] = epoch_qwk
 
-    # 4. Save results and checkpoint
+    # 4. Save results and best checkpoint
     artifacts_dir = default_config.paths.artifacts_dir
     checkpoint_path = artifacts_dir / "quality_assessor_net.pt"
-    torch.save(model.state_dict(), checkpoint_path)
-    print(f"\nModel checkpoint saved to: {checkpoint_path}")
+    if best_state_dict is not None:
+        torch.save(best_state_dict, checkpoint_path)
+    else:
+        torch.save(model.state_dict(), checkpoint_path)
+    print(f"\nBest model checkpoint saved to: {checkpoint_path} (Best Val MAE: {best_val_mae:.3f})")
 
     comparison = {
         "dataset_split": {
