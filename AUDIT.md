@@ -10,7 +10,7 @@ This revision replaces the earlier "all PASS" report. Several earlier claims wer
 
 | Area | Status | Notes |
 | :--- | :---: | :--- |
-| Sequence-group leakage prevention | **VERIFIED** | Group-level isolation verified across Train, Validation, and Test (intersection = $\emptyset$); `check_split_coverage` passed on all view classes. |
+| Sequence-group leakage prevention | **VERIFIED** | Group-level isolation verified across Train, Validation, and Test (intersection = empty set); `check_split_coverage` passed on all view classes. |
 | Path traversal protection | **VERIFIED** | `utils/paths.resolve_safe_path` uses `is_relative_to` on resolved paths; sibling-prefix and absolute-path regressions tested and passing. |
 | Manifest integrity claim | **VERIFIED** | `--validate` executed across all 37,736 images; confirmed 0 corrupt files, all 1920x1080x3. |
 | Policy attempt-limit bug | **VERIFIED** | Acceptance checked before attempt limit; regression tested in `test_policy_accepts_adequate_frame_after_last_allowed_maneuver`. |
