@@ -108,21 +108,21 @@ Comparison between classical spatial feature baseline and `CardiacEchoNet` (4-st
 
 | Metric | Classical (Spatial + Logistic) | CardiacEchoNet (CNN) | Paired Difference [95% CI] |
 | :--- | :---: | :---: | :---: |
-| **Accuracy** | 0.725 [0.642, 0.800] | 0.503 [0.425, 0.581] | $-0.222$ [$-0.315$, $-0.129$] |
-| **Macro F1-Score** | 0.684 [0.599, 0.751] | 0.473 [0.380, 0.560] | $-0.211$ [$-0.308$, $-0.114$] |
-| **ECE (Calibration)** | **0.125** | 0.143 | — |
+| **Accuracy** | **0.713** [0.663, 0.763] | 0.370 [0.313, 0.420] | $-0.343$ [$-0.407$, $-0.277$] |
+| **Macro F1-Score** | **0.688** [0.636, 0.734] | 0.258 [0.223, 0.291] | $-0.430$ [$-0.490$, $-0.366$] |
+| **ECE (Calibration)** | **0.107** | 0.292 | — |
 
 *Training uses mild rotation without horizontal flipping, preserving standard anatomical cardiac chamber orientation.*
 
 ### Quality Assessment (Module M3)
 Continuous regression against expert completeness/clarity grades (0–9 scale):
 
-| Metric | Naive Baseline (Mean $\bar{y} = 4.03$) | QualityAssessorNet (Best Val Checkpoint) |
+| Metric | Naive Baseline (Mean $\bar{y} = 3.99$) | QualityAssessorNet (Best Val Checkpoint) |
 | :--- | :---: | :---: |
-| **Mean Absolute Error (MAE)** | 2.286 [2.054, 2.534] | **1.738** [1.512, 1.964] |
-| **Root Mean Squared Error (RMSE)** | 2.646 [2.445, 2.850] | **2.258** [2.012, 2.504] |
-| **Pearson Correlation ($r$)** | 0.000 | **0.495** [0.382, 0.601] |
-| **Quadratic Weighted Kappa (QWK)** | 0.000 | **0.254** |
+| **Mean Absolute Error (MAE)** | 2.250 [2.100, 2.407] | **2.168** [2.033, 2.322] |
+| **Root Mean Squared Error (RMSE)** | 2.638 [2.513, 2.769] | **2.555** [2.409, 2.706] |
+| **Pearson Correlation ($r$)** | 0.000 | **0.411** [0.332, 0.485] |
+| **Quadratic Weighted Kappa (QWK)** | 0.000 | **0.138** |
 
 ---
 
