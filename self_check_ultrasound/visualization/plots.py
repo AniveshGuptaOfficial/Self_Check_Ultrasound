@@ -116,7 +116,6 @@ def plot_dataset_splits_distribution(
 
     ax.set_ylim(0, max(bottom) * 1.12)
     ax.legend(title="Cardiac View", bbox_to_anchor=(1.02, 1), loc="upper left", frameon=True)
-    plt.tight_layout()
     fig.savefig(output_path, dpi=300, bbox_inches="tight")
     plt.close(fig)
     return output_path
