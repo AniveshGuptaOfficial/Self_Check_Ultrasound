@@ -35,7 +35,70 @@ This project utilizes the **CACTUS** open dataset ([Elmekki et al., 2025](https:
 
 ---
 
-## 3. Architecture & Core Modules
+## 3. System Architecture & Core Modules
+
+### 3.1 End-to-End Decision Pipeline
+
+The system coordinates deep learning view classification, continuous quality estimation, out-of-fold task adequacy prediction, sector-masked physical fault diagnosis, and confidence-gated policy triage:
+
+```mermaid
+flowchart TD
+    subgraph S1["1. Ingestion & Preprocessing"]
+        RAW["Raw Echocardiogram Frame<br/>(Full HD 1920x1080)"] --> VAL["Resolution & Safety Check<br/>(resolve_safe_path)"]
+        VAL --> PREPROC["Standardized Transforms<br/>(Resize 224x224, Norm, No Flip)"]
+    end
+
+    subgraph S2["2. Deep Learning Feature Extraction"]
+        PREPROC --> M1["Module M1: View Recognition<br/>(CardiacEchoNet / Logistic Baseline)"]
+        PREPROC --> M3["Module M3: Quality Assessment<br/>(QualityAssessorNet - Grade 0-9)"]
+        
+        M1 --> VPROB["View Probabilities & Confidence<br/>(A4C, PL, PSAV, PSMV, SC, Random)"]
+        M3 --> QSCORE["Predicted Quality Grade<br/>(Completeness & Clarity Score)"]
+    end
+
+    subgraph S3["3. Task Adequacy Prediction (M4)"]
+        VPROB --> M4["Module M4: Adequacy Estimator<br/>(Calibrated Logistic Regression on OOF Targets)"]
+        QSCORE --> M4
+        M4 --> APROB["Task Adequacy Probability P(Adequate)"]
+    end
+
+    subgraph S4["4. Sector-Masked Fault Diagnosis (M5)"]
+        RAW --> SECTOR["Ultrasound Sector Cone Masking<br/>(Active acoustic field extraction)"]
+        SECTOR --> FEAT["Physics Feature Extraction<br/>(Inner sharpness, lateral drop-out, luminance)"]
+        FEAT --> M5["Module M5: Cause Classifier<br/>(RandomForest / Rule Fallback)"]
+        M5 --> FAULT["Diagnosed Acoustic Fault & Confidence<br/>(under_gain, motion_blur, shadow, off_axis, none)"]
+    end
+
+    subgraph S5["5. Reacquisition & Triage Policy (M6 / M7)"]
+        APROB --> M67["Module M6/M7: Decision Policy Engine"]
+        FAULT --> M67
+        ATTEMPT["Attempt Counter (k <= 3)"] --> M67
+
+        M67 -->|Adequacy >= 0.75| ACT_ACCEPT["[ACCEPT]<br/>Adequacy threshold met;<br/>Proceed to clinical analysis"]
+        M67 -->|Adequacy < 0.75 & Conf >= 0.60 & k <= 3| ACT_REACQUIRE["[REACQUIRE]<br/>Targeted Physical Guidance<br/>(e.g., 'Increase 2D gain / TGC')"]
+        M67 -->|Conf < 0.60 or k > 3 or Unknown| ACT_REFER["[REFER]<br/>Safe Clinical Abstention<br/>(Max attempts reached or ambiguous fault)"]
+    end
+
+    subgraph S6["6. Closed-Loop Simulator (M8)"]
+        ACT_REACQUIRE --> M8["Module M8: Closed-Loop Re-check Simulator"]
+        M8 -->|Simulated Operator Maneuver| RAW
+    end
+
+    classDef input fill:#e1f5fe,stroke:#0288d1,stroke-width:2px;
+    classDef model fill:#ede7f6,stroke:#512da8,stroke-width:2px;
+    classDef policy fill:#fff3e0,stroke:#f57c00,stroke-width:2px;
+    classDef action fill:#e8f5e9,stroke:#388e3c,stroke-width:2px;
+    classDef danger fill:#ffebee,stroke:#d32f2f,stroke-width:2px;
+
+    class RAW,VAL,PREPROC input;
+    class M1,M3,M4,M5,VPROB,QSCORE,APROB,FAULT,SECTOR,FEAT model;
+    class M67,ATTEMPT policy;
+    class ACT_ACCEPT action;
+    class ACT_REACQUIRE policy;
+    class ACT_REFER danger;
+```
+
+### 3.2 Package File Organization
 
 ```
 Self_Check_Ultrasound/
