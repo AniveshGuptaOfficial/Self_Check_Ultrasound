@@ -24,6 +24,10 @@ dist/
 *.egg-info/
 *.egg
 
+# IDE & editor settings
+.vscode/
+.idea/
+
 # OS specific
 Thumbs.db
 ehthumbs.db
