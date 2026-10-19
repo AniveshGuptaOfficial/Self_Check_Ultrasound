@@ -20,9 +20,6 @@ class PathConfig:
     artifacts_dir: Path = field(
         default_factory=lambda: Path(__file__).resolve().parent.parent / "artifacts"
     )
-    experiments_dir: Path = field(
-        default_factory=lambda: Path(__file__).resolve().parent.parent / "experiments"
-    )
     manifest_path: Path = field(
         default_factory=lambda: Path(__file__).resolve().parent.parent
         / "artifacts"

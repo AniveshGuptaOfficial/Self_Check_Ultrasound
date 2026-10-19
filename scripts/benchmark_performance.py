@@ -130,7 +130,7 @@ def main():
     adequacy_estimator = AdequacyEstimator()
     adequacy_ckpt = artifacts_dir / "adequacy_estimator.joblib"
     if adequacy_ckpt.exists():
-        adequacy_estimator.load(adequacy_ckpt)
+        adequacy_estimator = AdequacyEstimator.load(adequacy_ckpt)
         print("  - Loaded AdequacyEstimator from artifacts/adequacy_estimator.joblib")
     else:
         print("  - Using fallback heuristic AdequacyEstimator")
