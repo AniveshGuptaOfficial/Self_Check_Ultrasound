@@ -3,7 +3,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch 2.14+](https://img.shields.io/badge/PyTorch-2.14+-ee4c2c.svg)](https://pytorch.org/)
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
-[![Tests: 57 Passing](https://img.shields.io/badge/tests-57%20passing-brightgreen.svg)]()
+[![Tests: 60 Passing](https://img.shields.io/badge/tests-60%20passing-brightgreen.svg)]()
 [![Security: pip--audit clean](https://img.shields.io/badge/security-pip--audit%20clean-success.svg)]()
 
 A Python research prototype and machine learning framework for cardiac ultrasound (echocardiography). The system connects **image quality assessment**, **task-specific adequacy estimation**, **cause-aware reacquisition guidance**, and **closed-loop simulation** to support ultrasound acquisition quality control.
@@ -277,7 +277,7 @@ python scripts/build_manifest.py --validate
 ```powershell
 python -m pytest -v tests/
 ```
-*(Runs **57 automated unit tests** verifying data loaders, splits, coverage, degradations, models, metrics, performance benchmarks, paths, and security with 100% pass rate).*
+*(Runs **60 automated unit tests** verifying data loaders, splits, coverage, degradations, models, metrics, performance benchmarks, external validation, paths, and security with 100% pass rate).*
 
 ### 4. Train Models & Decision Modules
 ```powershell
