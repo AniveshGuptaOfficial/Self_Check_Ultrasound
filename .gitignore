@@ -10,6 +10,7 @@ ENV/
 
 # Output directories and datasets
 FRDR_dataset_1479_download_216_202610160047/
+Echocardiogram(EKG) dataset/
 artifacts/
 experiments/
 *.log
