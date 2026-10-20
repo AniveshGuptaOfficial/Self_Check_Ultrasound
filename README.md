@@ -59,32 +59,32 @@ The system is organized into eight modular, decoupled subsystems (**M1–M8**) c
 ```mermaid
 flowchart TD
     %% Styling Definitions
-    classDef input fill:#e1f5fe,stroke:#0288d1,stroke-width:2px;
-    classDef model fill:#ede7f6,stroke:#512da8,stroke-width:2px;
-    classDef policy fill:#fff3e0,stroke:#f57c00,stroke-width:2px;
-    classDef downstream fill:#e8eaf6,stroke:#303f9f,stroke-width:2px;
-    classDef action fill:#e8f5e9,stroke:#388e3c,stroke-width:2px;
-    classDef danger fill:#ffebee,stroke:#d32f2f,stroke-width:2px;
+    classDef input fill:#e1f5fe,stroke:#0288d1,stroke-width:2px
+    classDef model fill:#ede7f6,stroke:#512da8,stroke-width:2px
+    classDef policy fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef downstream fill:#e8eaf6,stroke:#303f9f,stroke-width:2px
+    classDef action fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    classDef danger fill:#ffebee,stroke:#d32f2f,stroke-width:2px
 
-    %% S1: Ingestion & Preprocessing (M1)
-    subgraph S1["1. Module M1: Preprocessing & View Recognition"]
-        RAW["Raw Echocardiogram Frame<br/>(Full HD 1920x1080 RGB)"] --> VAL["Resolution & Safety Validation<br/>(resolve_safe_path)"]
+    %% S1: Ingestion and Preprocessing (M1)
+    subgraph S1["1. Module M1 - Preprocessing and View Recognition"]
+        RAW["Raw Echocardiogram Frame<br/>(Full HD 1920x1080 RGB)"] --> VAL["Resolution and Safety Validation<br/>(resolve_safe_path)"]
         VAL --> SECTOR["Acoustic Sector Cone Masking<br/>(Active acoustic field extraction)"]
         VAL --> PREPROC["Standardized Transforms<br/>(Resize 224x224, Norm, No Flip)"]
-        PREPROC --> M1_VIEW["View Screening & Recognition<br/>(CardiacEchoNet / Logistic Baseline)"]
+        PREPROC --> M1_VIEW["View Screening and Recognition<br/>(CardiacEchoNet / Logistic Baseline)"]
         M1_VIEW --> VPROB["Candidate View Probabilities<br/>(A4C, PL, PSAV, PSMV, SC, Random)"]
     end
 
     %% S2: Quality Assessment (M3)
-    subgraph S2["2. Module M3: Quality Assessment"]
+    subgraph S2["2. Module M3 - Quality Assessment"]
         PREPROC --> M3["QualityAssessorNet Regressor<br/>(Continuous Grade 0 - 9)"]
         SECTOR --> PROXY_Q["Proxy Acoustic Quality Fallback<br/>(Sharpness, Saturation, Drop-out, Coverage)"]
-        M3 --> QSCORE["Predicted Quality Grade Q<br/>(Completeness & Clarity Score)"]
+        M3 --> QSCORE["Predicted Quality Grade Q<br/>(Completeness and Clarity Score)"]
         PROXY_Q -.->|Standalone Mode| QSCORE
     end
 
     %% S3: Task Adequacy Estimation (M4)
-    subgraph S3["3. Module M4: Adequacy Estimator"]
+    subgraph S3["3. Module M4 - Adequacy Estimator"]
         VPROB --> FEAT_ADEQ["Adequacy Feature Extraction<br/>(Quality Q, Top-1 Conf, Margin, Shannon Entropy)"]
         QSCORE --> FEAT_ADEQ
         FEAT_ADEQ --> M4["Adequacy Estimator<br/>(Calibrated Logistic Regression on OOF Targets)"]
@@ -92,53 +92,55 @@ flowchart TD
     end
 
     %% S4: Acoustic Cause Classification (M5)
-    subgraph S4["4. Module M5: Cause Classifier"]
+    subgraph S4["4. Module M5 - Cause Classifier"]
         SECTOR --> FEAT_PHYS["Sector-Masked Physics Feature Extractor<br/>(Luminance, Saturation, Column Drop-out, Radial Gradient)"]
         FEAT_PHYS --> M5["Cause Classifier<br/>(Random Forest / Calibrated Rule Fallbacks)"]
-        M5 --> FAULT["Diagnosed Acoustic Fault & Confidence<br/>(under_gain, over_gain, shadow, motion_blur, off_axis, none)"]
+        M5 --> FAULT["Diagnosed Acoustic Fault and Confidence<br/>(under_gain, over_gain, shadow, motion_blur, off_axis, none)"]
     end
 
     %% S5: Decision Policy Engine (M7)
-    subgraph S5["5. Module M7: Decision Policy Engine"]
+    subgraph S5["5. Module M7 - Decision Policy Engine"]
         APROB --> M7["Triage Policy Evaluation<br/>(tau_adeq = 0.75, tau_conf = 0.60, k_max = 3)"]
         FAULT --> M7
         ATTEMPT["Attempt Counter (k <= 3)"] --> M7
 
-        M7 -->|"Adequacy >= 0.75"| ACT_ACCEPT["[ACCEPT]<br/>Adequacy Threshold Met"]
-        M7 -->|"Adequacy < 0.75 and Conf >= 0.60 and k <= 3"| ACT_REACQUIRE["[REACQUIRE]<br/>Targeted Correction Required"]
-        M7 -->|"Conf < 0.60 or k > 3 or Unknown"| ACT_REFER["[REFER]<br/>Safe Clinical Abstention / Referral"]
+        M7 -->|"Adequacy >= 0.75"| ACT_ACCEPT["ACCEPT<br/>Adequacy Threshold Met"]
+        M7 -->|"Adequacy < 0.75 and Conf >= 0.60"| ACT_REACQUIRE["REACQUIRE<br/>Targeted Correction Required"]
+        M7 -->|"Conf < 0.60 or Attempts Exceeded"| ACT_REFER["REFER<br/>Safe Clinical Abstention / Referral"]
     end
 
     %% S6: Downstream Task Model (M2)
-    subgraph S6["6. Module M2: Downstream Task Model"]
+    subgraph S6["6. Module M2 - Downstream Task Model"]
         ACT_ACCEPT --> M2["Downstream Cardiac Task Execution<br/>(Full CardiacEchoNet Diagnostic Analysis)"]
-        M2 --> CLINICAL_OUT["Validated Cardiac View Output<br/>(Standard View Verified & Ready for Clinical Review)"]
+        M2 --> CLINICAL_OUT["Validated Cardiac View Output<br/>(Standard View Verified for Clinical Review)"]
     end
 
     %% S7: Guidance Mapper (M6)
-    subgraph S7["7. Module M6: Guidance Mapper"]
-        ACT_REACQUIRE --> M6["Reacquisition Guidance Engine<br/>(Maps Confident Physical Cause to Specific Maneuver)"]
+    subgraph S7["7. Module M6 - Guidance Mapper"]
+        ACT_REACQUIRE --> M6["Reacquisition Guidance Engine<br/>(Maps Confident Physical Cause to Maneuver)"]
         FAULT --> M6
-        M6 --> SUGGEST["Actionable Operator Suggestion<br/>- under_gain: Increase 2D gain / TGC<br/>- over_gain: Decrease 2D gain / resolve washout<br/>- shadow: Reposition probe / adjust intercostal window<br/>- motion_blur: Stabilize probe / suspend respiration<br/>- off_axis: Re-align probe to orthogonal standard axis"]
+        M6 --> SUGGEST["Actionable Operator Suggestion<br/>• Under-gain: Increase 2D gain / TGC<br/>• Over-gain: Decrease 2D gain / resolve washout<br/>• Shadowing: Reposition probe / adjust acoustic window<br/>• Motion blur: Stabilize probe / suspend respiration<br/>• Off-axis: Re-align probe to orthogonal standard plane"]
     end
 
     %% S8: Closed-Loop Re-Check Simulation (M8)
-    subgraph S8["8. Module M8: Closed-Loop Re-Check Simulator"]
+    subgraph S8["8. Module M8 - Closed-Loop Re-Check Simulator"]
         SUGGEST --> M8["ClosedLoopSimulator Engine<br/>(k = k + 1, Enforce Attempt Bounds)"]
         M8 --> SIM_MANEUVER["Simulate Operator Adjustment<br/>(Controlled Severity Reduction / Persistence)"]
-        SIM_MANEUVER -->|Successive Acquired Frame| RAW
+        SIM_MANEUVER --> FEEDBACK["Successive Acquired Frame<br/>(Feeds back to Module M1 for Re-Screening)"]
     end
 
+    FEEDBACK -.->|Loop back to Ingestion| RAW
+
     %% Class Assignments
-    class RAW,VAL,SECTOR,PREPROC input;
-    class M1_VIEW,VPROB,M3,QSCORE,FEAT_ADEQ,M4,APROB,FEAT_PHYS,M5,FAULT,PROXY_Q model;
-    class M7,ATTEMPT policy;
-    class M2,CLINICAL_OUT downstream;
-    class M6,SUGGEST policy;
-    class M8,SIM_MANEUVER action;
-    class ACT_ACCEPT action;
-    class ACT_REACQUIRE policy;
-    class ACT_REFER danger;
+    class RAW,VAL,SECTOR,PREPROC input
+    class M1_VIEW,VPROB,M3,QSCORE,FEAT_ADEQ,M4,APROB,FEAT_PHYS,M5,FAULT,PROXY_Q model
+    class M7,ATTEMPT policy
+    class M2,CLINICAL_OUT downstream
+    class M6,SUGGEST policy
+    class M8,SIM_MANEUVER,FEEDBACK action
+    class ACT_ACCEPT action
+    class ACT_REACQUIRE policy
+    class ACT_REFER danger
 ```
 
 ---
