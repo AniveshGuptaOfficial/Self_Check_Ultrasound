@@ -18,6 +18,7 @@ artifacts/
 experiments/
 *.log
 output1.txt
+structure.txt
 
 # PyTest
 .pytest_cache/

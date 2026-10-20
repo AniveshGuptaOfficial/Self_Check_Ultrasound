@@ -179,12 +179,16 @@ Self_Check_Ultrasound/
 │   ├── evaluate_cause_classifier.py # M5: Evaluates cause classifier on held-out synthetic & real grades
 │   ├── run_simulation.py          # M8: Executes canonical closed-loop reacquisition trajectories
 │   ├── interactive_demo.py        # Interactive CLI demo for testing individual echo frames
-│   ├── generate_research_plots.py # Generates Figures 1-5 in artifacts/figures/
+│   ├── generate_research_plots.py # Generates Figures 1-6 in artifacts/figures/
 │   ├── benchmark_performance.py   # M1-M8: Computational runtime latency & memory benchmarking
-│   └── external_validation.py     # Multi-center external validation runner (TMED-2, CAMUS, CAMEO)
-├── tests/                         # Comprehensive 60-test automated suite (100% pass)
-├── artifacts/                     # Evaluation metrics, performance benchmarks, and figures
-├── dist/                          # Distributable Python wheel (.whl) and source archive (.tar.gz)
+│   ├── external_validation.py     # Multi-center external validation runner (TMED-2, CAMUS, CAMEO)
+│   ├── run_multiseed_eval.py      # Evaluates multi-seed variance and robustness
+│   └── sync_results_table.py      # Validates and synchronizes README with results/ JSON
+├── tests/                         # Comprehensive 61-test automated suite (100% pass)
+├── results/                       # Traceable, version-controlled JSON benchmarks & multi-seed metrics
+├── docs/                          # Clinical reader study protocol & human-factors specifications
+├── artifacts/                     # Local figures, checkpoints, and evaluation cache (git-ignored)
+├── CITATION.cff                   # Machine-readable scholarly citation metadata
 ├── RESEARCH_PLAN.md               # Cardiac-framed clinical transfer & publication roadmap
 ├── requirements.txt               # Lower-bounded Python dependencies
 └── pyproject.toml                 # Standard packaging configuration (v1.0.0, SPDX CC-BY-4.0)
@@ -393,17 +397,18 @@ python scripts/benchmark_performance.py
 
 ---
 
-## 9. Build Distributable Package Archives (PEP 517/621)
+## 9. Packaging & Local Installation (PEP 517/621)
 
-To build standard distributable Python wheels and source tarballs:
+To install or build distributable packages locally:
 
 ```powershell
+# Editable local installation:
+pip install -e .
+
+# Optional: Build wheel and source archive into dist/ (git-ignored build output):
 python -m pip install build
 python -m build
 ```
-Generates:
-* `dist/self_check_ultrasound-1.0.0-py3-none-any.whl`
-* `dist/self_check_ultrasound-1.0.0.tar.gz`
 
 ---
 
