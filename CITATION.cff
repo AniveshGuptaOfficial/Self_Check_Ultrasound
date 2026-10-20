@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this software in your research, please cite it using the metadata below."
+title: "SelfCheckUltrasound: Image Quality-Aware Diagnosis and Reacquisition Guidance for Point-of-Care Echocardiography"
+abstract: "A modular machine learning framework and closed-loop decision support simulator for point-of-care cardiac ultrasound. Connects continuous image quality assessment, out-of-fold task adequacy estimation, physics-informed acoustic fault diagnosis, and guarded probe reacquisition guidance."
+version: 1.0.0
+date-released: 2026-10-19
+license: CC-BY-4.0
+repository-code: "https://github.com/AniveshGuptaOfficial/Self_Check_Ultrasound"
+keywords:
+  - echocardiography
+  - ultrasound
+  - quality-control
+  - point-of-care
+  - deep-learning
+  - reacquisition-guidance
+authors:
+  - family-names: "Gupta"
+    given-names: "Anivesh"
+preferred-citation:
+  type: generic
+  authors:
+    - family-names: "Gupta"
+      given-names: "Anivesh"
+  title: "SelfCheckUltrasound: Image Quality-Aware Diagnosis and Reacquisition Guidance for Point-of-Care Echocardiography"
+  year: 2026
+  url: "https://github.com/AniveshGuptaOfficial/Self_Check_Ultrasound"

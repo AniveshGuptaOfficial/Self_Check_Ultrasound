@@ -96,6 +96,83 @@ def calculate_qwk(
     )
 
 
+def compute_calibration_curve(
+    y_true: np.ndarray,
+    y_prob: np.ndarray,
+    n_bins: int = 10,
+) -> Dict[str, Any]:
+    """
+    Computes calibration curve statistics (accuracy vs. confidence per bin) and ECE.
+    Works for multi-class classification (using predicted top-1 confidence) and binary.
+
+    Returns dict with:
+        bin_edges: list of bin boundaries (length n_bins + 1)
+        bin_centers: list of bin midpoints (length n_bins)
+        bin_accuracies: list of empirical accuracies per bin
+        bin_confidences: list of mean predicted confidences per bin
+        bin_counts: list of sample counts per bin
+        bin_proportions: list of sample fractions per bin
+        ece: expected calibration error (float)
+        mce: maximum calibration error (float)
+    """
+    if y_prob.ndim == 1:
+        predictions = (y_prob >= 0.5).astype(int)
+        confidences = np.where(predictions == 1, y_prob, 1.0 - y_prob)
+    else:
+        predictions = np.argmax(y_prob, axis=1)
+        confidences = np.max(y_prob, axis=1)
+
+    accuracies = (predictions == y_true).astype(float)
+    bin_boundaries = np.linspace(0.0, 1.0, n_bins + 1)
+
+    bin_centers = []
+    bin_accuracies = []
+    bin_confidences = []
+    bin_counts = []
+    bin_proportions = []
+    ece = 0.0
+    mce = 0.0
+    n_total = len(y_true)
+
+    for i in range(n_bins):
+        b_low = bin_boundaries[i]
+        b_high = bin_boundaries[i + 1]
+        bin_centers.append(float((b_low + b_high) / 2.0))
+
+        if i == 0:
+            in_bin = (confidences >= b_low) & (confidences <= b_high)
+        else:
+            in_bin = (confidences > b_low) & (confidences <= b_high)
+
+        count = int(np.sum(in_bin))
+        prop = float(count / max(n_total, 1))
+        bin_counts.append(count)
+        bin_proportions.append(prop)
+
+        if count > 0:
+            acc_in_bin = float(np.mean(accuracies[in_bin]))
+            conf_in_bin = float(np.mean(confidences[in_bin]))
+            bin_accuracies.append(acc_in_bin)
+            bin_confidences.append(conf_in_bin)
+            diff = abs(conf_in_bin - acc_in_bin)
+            ece += diff * prop
+            mce = max(mce, diff)
+        else:
+            bin_accuracies.append(0.0)
+            bin_confidences.append(float(bin_centers[-1]))
+
+    return {
+        "bin_edges": [float(x) for x in bin_boundaries],
+        "bin_centers": bin_centers,
+        "bin_accuracies": bin_accuracies,
+        "bin_confidences": bin_confidences,
+        "bin_counts": bin_counts,
+        "bin_proportions": bin_proportions,
+        "ece": float(ece),
+        "mce": float(mce),
+    }
+
+
 def calculate_ece(
     y_true: np.ndarray,
     y_prob: np.ndarray,
@@ -104,22 +181,5 @@ def calculate_ece(
     """
     Computes Expected Calibration Error (ECE) for predicted class probabilities.
     """
-    confidences = np.max(y_prob, axis=1)
-    predictions = np.argmax(y_prob, axis=1)
-    accuracies = predictions == y_true
-
-    ece = 0.0
-    bin_boundaries = np.linspace(0, 1, n_bins + 1)
-
-    for i in range(n_bins):
-        bin_lower = bin_boundaries[i]
-        bin_upper = bin_boundaries[i + 1]
-        in_bin = (confidences > bin_lower) & (confidences <= bin_upper)
-        prop_in_bin = np.mean(in_bin)
-
-        if prop_in_bin > 0:
-            accuracy_in_bin = np.mean(accuracies[in_bin])
-            avg_confidence_in_bin = np.mean(confidences[in_bin])
-            ece += np.abs(avg_confidence_in_bin - accuracy_in_bin) * prop_in_bin
-
-    return float(ece)
+    curve = compute_calibration_curve(y_true, y_prob, n_bins=n_bins)
+    return float(curve["ece"])

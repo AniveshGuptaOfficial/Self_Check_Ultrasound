@@ -374,3 +374,100 @@ def plot_simulation_trajectories(
     fig.savefig(output_path, dpi=300, bbox_inches="tight")
     plt.close(fig)
     return output_path
+
+
+def plot_reliability_diagram(
+    models_data: Dict[str, Any],
+    output_path: Path,
+    title: str = "Reliability Diagrams: Model Calibration Evaluation",
+    n_bins: int = 10,
+) -> Path:
+    """
+    Plots publication-grade reliability diagrams comparing model calibration curves.
+
+    Parameters:
+        models_data: Dict mapping model name to either:
+                     - precomputed calibration curve dict from compute_calibration_curve(), or
+                     - tuple/list (y_true, y_prob)
+        output_path: Path to save the 300 DPI image
+        title: Plot title
+        n_bins: Number of confidence bins (default 10)
+    """
+    from self_check_ultrasound.utils.metrics import compute_calibration_curve
+
+    set_publication_style()
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    fig, (ax_rel, ax_hist) = plt.subplots(
+        2, 1, figsize=(8.5, 9.5), gridspec_kw={"height_ratios": [2.5, 1]}, sharex=True
+    )
+
+    # 1. Perfect calibration diagonal
+    ax_rel.plot([0, 1], [0, 1], linestyle="--", color="#888888", linewidth=1.5, label="Perfect Calibration (y = x)")
+
+    colors = [PALETTE["primary"], PALETTE["accent"], PALETTE["secondary"], PALETTE["danger"]]
+    model_curves = {}
+
+    for idx, (m_name, data) in enumerate(models_data.items()):
+        if isinstance(data, dict) and "bin_accuracies" in data:
+            curve = data
+        elif isinstance(data, (tuple, list)) and len(data) == 2:
+            curve = compute_calibration_curve(data[0], data[1], n_bins=n_bins)
+        else:
+            raise ValueError(f"Unrecognized calibration data format for model {m_name}")
+
+        model_curves[m_name] = curve
+        color = colors[idx % len(colors)]
+        centers = curve["bin_centers"]
+        accs = curve["bin_accuracies"]
+        confs = curve["bin_confidences"]
+        ece = curve.get("ece", 0.0)
+
+        label = f"{m_name} (ECE = {ece:.3f})"
+        ax_rel.plot(
+            confs, accs, marker="o", linewidth=2.0, markersize=6, color=color, label=label
+        )
+
+        # Draw shaded calibration gap
+        for c, a in zip(confs, accs):
+            ax_rel.plot([c, c], [c, a], color=color, alpha=0.35, linewidth=1.2)
+
+    ax_rel.set_ylabel("Empirical Accuracy", labelpad=8)
+    ax_rel.set_ylim(-0.02, 1.05)
+    ax_rel.set_xlim(0.0, 1.0)
+    ax_rel.set_title(title, pad=12, fontweight="bold")
+    ax_rel.grid(True)
+    ax_rel.legend(loc="upper left", frameon=True, fontsize=9.5)
+
+    # 2. Confidence histogram
+    bin_edges = np.linspace(0.0, 1.0, n_bins + 1)
+    bar_width = 1.0 / (n_bins * (len(models_data) + 1))
+
+    for idx, (m_name, curve) in enumerate(model_curves.items()):
+        color = colors[idx % len(colors)]
+        centers = np.array(curve["bin_centers"])
+        props = np.array(curve.get("bin_proportions", [])) * 100.0  # percentage
+        offsets = (idx - (len(models_data) - 1) / 2.0) * bar_width
+        ax_hist.bar(
+            centers + offsets,
+            props,
+            width=bar_width * 0.9,
+            color=color,
+            alpha=0.75,
+            edgecolor=color,
+            label=m_name,
+        )
+
+    ax_hist.set_xlabel("Predicted Confidence Bin", labelpad=8)
+    ax_hist.set_ylabel("Sample %", labelpad=8)
+    ax_hist.set_xticks(bin_edges)
+    ax_hist.set_xticklabels([f"{x:.1f}" for x in bin_edges])
+    ax_hist.set_xlim(0.0, 1.0)
+    ax_hist.grid(True)
+    ax_hist.legend(loc="upper right", frameon=True, fontsize=8.5)
+
+    plt.tight_layout()
+    fig.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+    return output_path

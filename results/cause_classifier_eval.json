@@ -1,0 +1,167 @@
+{
+  "n_train_samples": 288,
+  "synthetic": {
+    "val": {
+      "evidence": "synthetic faults, held-out sequence groups",
+      "split": "val",
+      "n": 504,
+      "accuracy": 0.7638888888888888,
+      "per_fault_accuracy": {
+        "none": 1.0,
+        "under_gain": 0.5208333333333334,
+        "over_gain": 1.0,
+        "acoustic_shadow": 0.6770833333333334,
+        "motion_blur": 0.71875,
+        "off_axis": 0.84375
+      },
+      "per_severity_accuracy": {
+        "0.3": 0.325,
+        "0.5": 0.7,
+        "0.7": 0.9833333333333333,
+        "0.9": 1.0
+      },
+      "abstain_rate": 0.2222222222222222,
+      "confusion": {
+        "none": {
+          "none": 24,
+          "under_gain": 0,
+          "over_gain": 0,
+          "acoustic_shadow": 0,
+          "motion_blur": 0,
+          "off_axis": 0
+        },
+        "under_gain": {
+          "none": 0,
+          "under_gain": 50,
+          "over_gain": 0,
+          "acoustic_shadow": 0,
+          "motion_blur": 46,
+          "off_axis": 0
+        },
+        "over_gain": {
+          "none": 0,
+          "under_gain": 0,
+          "over_gain": 96,
+          "acoustic_shadow": 0,
+          "motion_blur": 0,
+          "off_axis": 0
+        },
+        "acoustic_shadow": {
+          "none": 31,
+          "under_gain": 0,
+          "over_gain": 0,
+          "acoustic_shadow": 65,
+          "motion_blur": 0,
+          "off_axis": 0
+        },
+        "motion_blur": {
+          "none": 21,
+          "under_gain": 0,
+          "over_gain": 0,
+          "acoustic_shadow": 6,
+          "motion_blur": 69,
+          "off_axis": 0
+        },
+        "off_axis": {
+          "none": 14,
+          "under_gain": 0,
+          "over_gain": 0,
+          "acoustic_shadow": 0,
+          "motion_blur": 1,
+          "off_axis": 81
+        }
+      }
+    },
+    "test": {
+      "evidence": "synthetic faults, held-out sequence groups",
+      "split": "test",
+      "n": 672,
+      "accuracy": 0.8095238095238095,
+      "per_fault_accuracy": {
+        "none": 1.0,
+        "under_gain": 0.6484375,
+        "over_gain": 1.0,
+        "acoustic_shadow": 0.7265625,
+        "motion_blur": 0.7734375,
+        "off_axis": 0.8515625
+      },
+      "per_severity_accuracy": {
+        "0.3": 0.3875,
+        "0.5": 0.825,
+        "0.7": 0.9875,
+        "0.9": 1.0
+      },
+      "abstain_rate": 0.21577380952380953,
+      "confusion": {
+        "none": {
+          "none": 32,
+          "under_gain": 0,
+          "over_gain": 0,
+          "acoustic_shadow": 0,
+          "motion_blur": 0,
+          "off_axis": 0
+        },
+        "under_gain": {
+          "none": 0,
+          "under_gain": 83,
+          "over_gain": 0,
+          "acoustic_shadow": 0,
+          "motion_blur": 45,
+          "off_axis": 0
+        },
+        "over_gain": {
+          "none": 0,
+          "under_gain": 0,
+          "over_gain": 128,
+          "acoustic_shadow": 0,
+          "motion_blur": 0,
+          "off_axis": 0
+        },
+        "acoustic_shadow": {
+          "none": 34,
+          "under_gain": 0,
+          "over_gain": 0,
+          "acoustic_shadow": 93,
+          "motion_blur": 1,
+          "off_axis": 0
+        },
+        "motion_blur": {
+          "none": 21,
+          "under_gain": 0,
+          "over_gain": 0,
+          "acoustic_shadow": 8,
+          "motion_blur": 99,
+          "off_axis": 0
+        },
+        "off_axis": {
+          "none": 16,
+          "under_gain": 0,
+          "over_gain": 0,
+          "acoustic_shadow": 2,
+          "motion_blur": 1,
+          "off_axis": 109
+        }
+      }
+    }
+  },
+  "real_expert_grades": {
+    "val": {
+      "evidence": "real expert grades (no synthetic degradation)",
+      "split": "val",
+      "n_high": 75,
+      "n_low": 150,
+      "auroc_p_none_vs_high_grade": 0.7698222222222223,
+      "frac_predicted_none_high_grade": 1.0,
+      "frac_predicted_none_low_grade": 0.92
+    },
+    "test": {
+      "evidence": "real expert grades (no synthetic degradation)",
+      "split": "test",
+      "n_high": 93,
+      "n_low": 150,
+      "auroc_p_none_vs_high_grade": 0.7009677419354838,
+      "frac_predicted_none_high_grade": 1.0,
+      "frac_predicted_none_low_grade": 0.82
+    }
+  }
+}

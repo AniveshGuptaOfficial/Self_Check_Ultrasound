@@ -14,6 +14,7 @@ from self_check_ultrasound.visualization.plots import (
     plot_degradation_grid,
     plot_confusion_matrices,
     plot_simulation_trajectories,
+    plot_reliability_diagram,
 )
 from self_check_ultrasound.data.degradations import SyntheticDegradationPipeline
 
@@ -104,5 +105,26 @@ def test_plot_simulation_trajectories(tmp_path):
 
     out_file = tmp_path / "test_fig5.png"
     result = plot_simulation_trajectories(traj_file, out_file)
+    assert result.exists()
+    assert result.stat().st_size > 1000
+
+
+def test_plot_reliability_diagram(tmp_path):
+    out_file = tmp_path / "test_fig6_calibration.png"
+    y_true = np.array([0, 1, 0, 1, 0, 1, 0, 1])
+    y_prob = np.array([
+        [0.85, 0.15],
+        [0.10, 0.90],
+        [0.70, 0.30],
+        [0.25, 0.75],
+        [0.60, 0.40],
+        [0.35, 0.65],
+        [0.90, 0.10],
+        [0.45, 0.55],
+    ])
+    models_data = {
+        "Test Model A": (y_true, y_prob),
+    }
+    result = plot_reliability_diagram(models_data, out_file)
     assert result.exists()
     assert result.stat().st_size > 1000

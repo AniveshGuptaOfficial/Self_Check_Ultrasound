@@ -1,0 +1,153 @@
+[
+  {
+    "case_id": "Case_1_IncidentFree",
+    "description": "Nominal high-quality echocardiogram without acoustic faults",
+    "initial_fault": "none",
+    "final_action": "REFER",
+    "total_attempts": 1,
+    "success": false,
+    "assessment_mode": "trained_models+fitted_adequacy",
+    "trajectory": [
+      {
+        "attempt": 1,
+        "quality_grade": 2.900928497314453,
+        "adequacy_prob": 0.6634916273759218,
+        "diagnosed_fault": "none",
+        "true_fault": "none",
+        "diagnosis_correct": true,
+        "fault_confidence": 0.9026153846153846,
+        "action": "REFER",
+        "reason": "Adequacy failed but no actionable physical artifact was confidently recognized.",
+        "applied_maneuver": null
+      }
+    ]
+  },
+  {
+    "case_id": "Case_2_Recovery_UnderGain",
+    "description": "Acoustic attenuation / insufficient overall gain",
+    "initial_fault": "under_gain",
+    "final_action": "ACCEPT",
+    "total_attempts": 1,
+    "success": true,
+    "assessment_mode": "trained_models+fitted_adequacy",
+    "trajectory": [
+      {
+        "attempt": 1,
+        "quality_grade": 0.6015678644180298,
+        "adequacy_prob": 0.9999999808012204,
+        "diagnosed_fault": "under_gain",
+        "true_fault": "under_gain",
+        "diagnosis_correct": true,
+        "fault_confidence": 1.0,
+        "action": "ACCEPT",
+        "reason": "Adequacy probability (1.00) meets acceptance threshold (0.75).",
+        "applied_maneuver": null
+      }
+    ]
+  },
+  {
+    "case_id": "Case_3_Recovery_MotionBlur",
+    "description": "Transducer motion artifact / respiration blur",
+    "initial_fault": "motion_blur",
+    "final_action": "ACCEPT",
+    "total_attempts": 1,
+    "success": true,
+    "assessment_mode": "trained_models+fitted_adequacy",
+    "trajectory": [
+      {
+        "attempt": 1,
+        "quality_grade": 1.8586095571517944,
+        "adequacy_prob": 0.9222841117434218,
+        "diagnosed_fault": "motion_blur",
+        "true_fault": "motion_blur",
+        "diagnosis_correct": true,
+        "fault_confidence": 0.97,
+        "action": "ACCEPT",
+        "reason": "Adequacy probability (0.92) meets acceptance threshold (0.75).",
+        "applied_maneuver": null
+      }
+    ]
+  },
+  {
+    "case_id": "Case_4_Recovery_RibShadow",
+    "description": "Rib acoustic occlusion across lateral cardiac sector",
+    "initial_fault": "acoustic_shadow",
+    "final_action": "ACCEPT",
+    "total_attempts": 1,
+    "success": true,
+    "assessment_mode": "trained_models+fitted_adequacy",
+    "trajectory": [
+      {
+        "attempt": 1,
+        "quality_grade": 1.6898245811462402,
+        "adequacy_prob": 0.8288635106674285,
+        "diagnosed_fault": "acoustic_shadow",
+        "true_fault": "acoustic_shadow",
+        "diagnosis_correct": true,
+        "fault_confidence": 0.755,
+        "action": "ACCEPT",
+        "reason": "Adequacy probability (0.83) meets acceptance threshold (0.75).",
+        "applied_maneuver": null
+      }
+    ]
+  },
+  {
+    "case_id": "Case_5_Referral_PersistentFault",
+    "description": "Severe persistent uninterpretable fault exceeding attempt limit",
+    "initial_fault": "off_axis",
+    "final_action": "REFER",
+    "total_attempts": 4,
+    "success": false,
+    "assessment_mode": "trained_models+fitted_adequacy",
+    "trajectory": [
+      {
+        "attempt": 1,
+        "quality_grade": 3.487104654312134,
+        "adequacy_prob": 0.02104388187145125,
+        "diagnosed_fault": "off_axis",
+        "true_fault": "off_axis",
+        "diagnosis_correct": true,
+        "fault_confidence": 1.0,
+        "action": "REACQUIRE",
+        "reason": "Adequacy insufficient (0.02). Confidently diagnosed off_axis (conf: 1.00).",
+        "applied_maneuver": "Re-align probe to orthogonal anatomical standard view axis."
+      },
+      {
+        "attempt": 2,
+        "quality_grade": 3.487104654312134,
+        "adequacy_prob": 0.02104388187145125,
+        "diagnosed_fault": "off_axis",
+        "true_fault": "off_axis",
+        "diagnosis_correct": true,
+        "fault_confidence": 1.0,
+        "action": "REACQUIRE",
+        "reason": "Adequacy insufficient (0.02). Confidently diagnosed off_axis (conf: 1.00).",
+        "applied_maneuver": "Re-align probe to orthogonal anatomical standard view axis."
+      },
+      {
+        "attempt": 3,
+        "quality_grade": 3.487104654312134,
+        "adequacy_prob": 0.02104388187145125,
+        "diagnosed_fault": "off_axis",
+        "true_fault": "off_axis",
+        "diagnosis_correct": true,
+        "fault_confidence": 1.0,
+        "action": "REACQUIRE",
+        "reason": "Adequacy insufficient (0.02). Confidently diagnosed off_axis (conf: 1.00).",
+        "applied_maneuver": "Re-align probe to orthogonal anatomical standard view axis."
+      },
+      {
+        "attempt": 4,
+        "quality_grade": 3.487104654312134,
+        "adequacy_prob": 0.02104388187145125,
+        "diagnosed_fault": "off_axis",
+        "true_fault": "off_axis",
+        "diagnosis_correct": true,
+        "fault_confidence": 1.0,
+        "action": "REFER",
+        "reason": "Maximum reacquisition attempt limit reached (3 attempts).",
+        "applied_maneuver": null
+      }
+    ]
+  }
+]

@@ -32,7 +32,7 @@ sys.path.insert(0, str(project_root))
 
 from self_check_ultrasound.config import default_config
 from self_check_ultrasound.utils.seed import set_seed
-from self_check_ultrasound.utils.metrics import calculate_classification_metrics, calculate_ece
+from self_check_ultrasound.utils.metrics import calculate_classification_metrics, calculate_ece, compute_calibration_curve
 from self_check_ultrasound.utils.eval_utils import balanced_subsample, bootstrap_ci, paired_bootstrap_diff
 from self_check_ultrasound.data.dataset import CardiacUltrasoundDataset
 from self_check_ultrasound.data.transforms import get_transforms
@@ -68,7 +68,8 @@ def predict_loader(model, loader, device):
 def split_metrics(y, probs, class_names):
     preds = np.argmax(probs, axis=1)
     m = calculate_classification_metrics(y, preds, class_names)
-    m["ece"] = calculate_ece(y, probs)
+    m["calibration_curve"] = compute_calibration_curve(y, probs)
+    m["ece"] = m["calibration_curve"]["ece"]
     m["ci95_accuracy"] = bootstrap_ci(y, preds, accuracy_score)
     m["ci95_macro_f1"] = bootstrap_ci(y, preds, macro_f1)
     return m, preds

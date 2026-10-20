@@ -25,7 +25,9 @@ from self_check_ultrasound.visualization.plots import (
     plot_degradation_grid,
     plot_confusion_matrices,
     plot_simulation_trajectories,
+    plot_reliability_diagram,
 )
+import json
 
 
 def main():
@@ -88,13 +90,29 @@ def main():
 
     # 5. Figure 5: Closed-Loop Trajectories
     fig5_path = figures_dir / "fig5_closed_loop_trajectories.png"
-    print(f"\n[5/5] Generating Figure 5: Closed-Loop Simulation Trajectories...")
+    print(f"\n[5/6] Generating Figure 5: Closed-Loop Simulation Trajectories...")
     if trajectories_path.exists():
         plot_simulation_trajectories(trajectories_path, fig5_path)
         generated_figures.append(("Figure 5: Simulation Trajectories", fig5_path))
         print(f"      Saved: {fig5_path} ({fig5_path.stat().st_size / 1024:.1f} KB)")
     else:
         print(f"      [SKIP] Trajectories file not found at {trajectories_path}")
+
+    # 6. Figure 6: Reliability Diagrams (Model Calibration)
+    fig6_path = figures_dir / "fig6_reliability_diagram.png"
+    print(f"\n[6/6] Generating Figure 6: Reliability Diagrams (Model Calibration)...")
+    calib_path = default_config.paths.artifacts_dir / "calibration_data.json"
+    results_calib_path = project_root / "results" / "calibration_data.json"
+    target_calib = calib_path if calib_path.exists() else results_calib_path
+
+    if target_calib.exists():
+        with open(target_calib, "r", encoding="utf-8") as f:
+            calib_data = json.load(f)
+        plot_reliability_diagram(calib_data, fig6_path)
+        generated_figures.append(("Figure 6: Reliability Diagram", fig6_path))
+        print(f"      Saved: {fig6_path} ({fig6_path.stat().st_size / 1024:.1f} KB)")
+    else:
+        print(f"      [SKIP] Calibration data not found at {target_calib}")
 
     print("\n" + "=" * 70)
     print("RESEARCH FIGURE GENERATION COMPLETE")
