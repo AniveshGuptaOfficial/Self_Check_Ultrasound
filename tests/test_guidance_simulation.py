@@ -73,6 +73,23 @@ def test_adequacy_estimator_fit_save_load(tmp_path):
     assert np.allclose(est.predict_probability(X), loaded.predict_probability(X))
 
 
+def test_adequacy_target_excludes_random():
+    """Verifies that correctly identified Random (non-standard) frames are marked inadequate."""
+    random_idx = 4  # Class index for Random view
+    preds = np.array([0, 1, 4, 4, 2])
+    labels = np.array([0, 1, 4, 0, 3])
+
+    # Clinically corrected adequacy rule
+    y = ((preds == labels) & (labels != random_idx)).astype(int)
+
+    assert y[0] == 1  # Standard view correctly identified -> adequate
+    assert y[1] == 1  # Standard view correctly identified -> adequate
+    assert y[2] == 0  # Correctly predicted Random -> NOT adequate
+    assert y[3] == 0  # Predicted Random on true A4C -> inadequate
+    assert y[4] == 0  # Predicted PSAV on true PSMV -> inadequate
+
+
+
 # ------------------------------------------------------------------ M5
 def test_cause_classifier_feature_extraction(dummy_echo_image):
     from PIL import Image

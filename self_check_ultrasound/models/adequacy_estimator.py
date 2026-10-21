@@ -23,7 +23,7 @@ class AdequacyEstimator:
     """
     Predicts binary task-specific adequacy P(Adequate | Features).
     Adequacy target (see scripts/train_adequacy.py): the downstream view classifier
-    predicts the correct cardiac view for the frame.
+    predicts the correct standard cardiac view for the frame (and true view is not Random).
     """
 
     FEATURE_NAMES = ("predicted_quality", "top1_confidence", "top2_margin", "entropy")

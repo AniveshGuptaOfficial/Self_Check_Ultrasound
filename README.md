@@ -185,8 +185,9 @@ Self_Check_Ultrasound/
 │   ├── benchmark_performance.py   # M1-M8: Computational runtime latency & memory benchmarking
 │   ├── external_validation.py     # Multi-center external validation runner (TMED-2, CAMUS, CAMEO)
 │   ├── run_multiseed_eval.py      # Evaluates multi-seed variance and robustness
+│   ├── run_ablation_study.py      # Gating ablation study (selective accuracy at matched accept rates)
 │   └── sync_results_table.py      # Validates and synchronizes README with results/ JSON
-├── tests/                         # Comprehensive 61-test automated suite (100% pass)
+├── tests/                         # Comprehensive 66-test automated suite (100% pass)
 ├── results/                       # Traceable, version-controlled JSON benchmarks & multi-seed metrics
 ├── docs/                          # Clinical reader study protocol & human-factors specifications
 ├── artifacts/                     # Local figures, checkpoints, and evaluation cache (git-ignored)

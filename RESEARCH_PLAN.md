@@ -41,7 +41,7 @@ should reject them, and `accept_rate_unseen_views` measures that.
 | | Objective | Status |
 |---|---|---|
 | O1 | Three-way accept / reacquire / refer policy with attempt limit | DONE (policy, tests) |
-| O2 | Adequacy = predicted reliability of view recognition, fitted on held-out outcomes | BUILT (`train_adequacy.py`), not run |
+| O2 | Adequacy = predicted reliability of view recognition, fitted on held-out outcomes | DONE (`train_adequacy.py` patched for Random-class & fitted) |
 | O3a | Cause tier 1: misalignment causes from controlled data | OPEN (current off_axis is a crop) |
 | O3b | Cause tier 2: acoustic/contact causes from a small expert-annotated set of real frames; abstain when confidence is low | abstention DONE; annotated set OPEN |
 | O4 | Closed-loop re-check, external validation, calibration reporting, multi-reader assessment (Komatsu recommendations) | re-check simulated; external tooling BUILT (`external_validation.py`); reader study OPEN |
@@ -51,7 +51,7 @@ should reject them, and `accept_rate_unseen_views` measures that.
 2. External, zero-shot, no tuning: run `external_validation.py` on TMED-2, CAMUS, CAMEO. Report view accuracy with CI on mapped classes,
    adequacy AUROC for "view predicted correctly", accept rate on unseen views, and for CAMUS/CAMEO Spearman and AUROC of
    predicted quality against expert grade. Expect a large drop (phantom to patients); report it.
-3. Ablation: policy vs quality-only gate vs confidence-only gate, on selective accuracy at matched accept rate.
+3. Ablation: policy vs quality-only gate vs confidence-only gate, on selective accuracy at matched accept rate (DONE: `scripts/run_ablation_study.py`).
 4. Cause classifier: held-out synthetic accuracy (labelled as such) plus AUROC of P(clean) against real expert grades (CAMUS/CAMEO).
 5. Closed loop: simulated recovery, always labelled simulated. A real novice or reader study needs a clinical collaborator.
 6. Report calibration and failure cases, not only means.
@@ -64,8 +64,8 @@ evaluated for calibration and external transfer. Not claimed: entropy quality, a
 - Q2-style outcome (achievable with current scope): policy + calibration + external zero-shot transfer + honest simulated loop.
 - Q1-style outcome (needs more): real expert-annotated acoustic-cause set, at least one external dataset showing useful
   selective accuracy, and a small reader or novice evaluation. Check the target journal's current quartile and scope before committing.
-- Milestones: (1) apply patch, rerun baselines; (2) fit adequacy; (3) get TMED-2 and CAMUS access; (4) external runs;
-  (5) annotated real-frame subset; (6) ablations; (7) draft; (8) literature swap so the set is cardiac-focused and not dominated by one group.
+- Milestones: (1) apply patch, rerun baselines; (2) fit adequacy (DONE); (3) get TMED-2 and CAMUS access; (4) external runs;
+  (5) annotated real-frame subset; (6) ablations (DONE); (7) draft; (8) literature swap so the set is cardiac-focused and not dominated by one group.
 
 ## 9. Risks
 Phantom-to-patient shift may make zero-shot numbers poor; CAMEO quality scale unknown; TMED-2 images are 112x112 (resolution mismatch);

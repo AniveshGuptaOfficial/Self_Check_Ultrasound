@@ -2,7 +2,7 @@
 Fit the task-specific AdequacyEstimator (Module M4) on REAL held-out downstream outcomes.
 
 Target:  adequate = 1 if the trained view classifier (CardiacEchoNet) predicts the correct
-         cardiac view for the frame, else 0.
+         standard cardiac view for the frame AND true view is not Random, else 0.
 Features: predicted quality (QualityAssessorNet) + view-probability confidence / margin / entropy.
 
 Protocol (no in-sample fitting):
@@ -70,7 +70,11 @@ def collect_features(df, view_model, quality_model, estimator, device, batch_siz
     quality = np.clip(np.concatenate(qual_all), 0.0, 9.0)
     labels = np.concatenate(labels_all)
     X = estimator.extract_adequacy_features(quality, probs)
-    y = (np.argmax(probs, axis=1) == labels).astype(int)
+    
+    # Adequate = downstream classifier predicts correct view AND true view is a standard cardiac view (not Random)
+    random_idx = default_config.data.class_to_idx.get("Random", 4)
+    preds = np.argmax(probs, axis=1)
+    y = ((preds == labels) & (labels != random_idx)).astype(int)
     return X, y
 
 
@@ -85,6 +89,7 @@ def report(y, p, threshold):
     out["accept_rate"] = float(acc.mean())
     out["view_accuracy_on_accepted"] = float(y[acc].mean()) if acc.any() else None
     out["view_accuracy_on_rejected"] = float(y[~acc].mean()) if (~acc).any() else None
+    out["selective_accuracy"] = float(y[acc].mean()) if acc.any() else None
     return out
 
 

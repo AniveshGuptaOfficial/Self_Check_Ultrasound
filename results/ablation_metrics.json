@@ -1,0 +1,398 @@
+{
+  "n_total": 300,
+  "base_rate_adequate": 0.3367,
+  "n_random_views": 50,
+  "n_standard_views": 250,
+  "strategies": {
+    "fitted_adequacy": {
+      "auroc": 0.9577,
+      "average_precision": 0.9032,
+      "aurc": 0.2558,
+      "by_coverage": {
+        "20%": {
+          "target_coverage": 0.2,
+          "actual_coverage": 0.2,
+          "selective_accuracy": 0.9667,
+          "selective_risk": 0.0333,
+          "random_rejection_rate": 0.96,
+          "standard_view_coverage": 0.232
+        },
+        "40%": {
+          "target_coverage": 0.4,
+          "actual_coverage": 0.4,
+          "selective_accuracy": 0.7917,
+          "selective_risk": 0.2083,
+          "random_rejection_rate": 0.62,
+          "standard_view_coverage": 0.404
+        },
+        "50%": {
+          "target_coverage": 0.5,
+          "actual_coverage": 0.5,
+          "selective_accuracy": 0.66,
+          "selective_risk": 0.34,
+          "random_rejection_rate": 0.48,
+          "standard_view_coverage": 0.496
+        },
+        "60%": {
+          "target_coverage": 0.6,
+          "actual_coverage": 0.6,
+          "selective_accuracy": 0.55,
+          "selective_risk": 0.45,
+          "random_rejection_rate": 0.46,
+          "standard_view_coverage": 0.612
+        },
+        "70%": {
+          "target_coverage": 0.7,
+          "actual_coverage": 0.7,
+          "selective_accuracy": 0.4762,
+          "selective_risk": 0.5238,
+          "random_rejection_rate": 0.3,
+          "standard_view_coverage": 0.7
+        },
+        "80%": {
+          "target_coverage": 0.8,
+          "actual_coverage": 0.8,
+          "selective_accuracy": 0.4167,
+          "selective_risk": 0.5833,
+          "random_rejection_rate": 0.2,
+          "standard_view_coverage": 0.8
+        },
+        "90%": {
+          "target_coverage": 0.9,
+          "actual_coverage": 0.9,
+          "selective_accuracy": 0.3704,
+          "selective_risk": 0.6296,
+          "random_rejection_rate": 0.08,
+          "standard_view_coverage": 0.896
+        }
+      },
+      "name": "Fitted Adequacy Estimator (M4)",
+      "description": "Multi-feature calibrated logistic regression (Quality + Conf + Margin + Entropy)"
+    },
+    "quality_only": {
+      "auroc": 0.8479,
+      "average_precision": 0.791,
+      "aurc": 0.3191,
+      "by_coverage": {
+        "20%": {
+          "target_coverage": 0.2,
+          "actual_coverage": 0.2,
+          "selective_accuracy": 0.8333,
+          "selective_risk": 0.1667,
+          "random_rejection_rate": 0.94,
+          "standard_view_coverage": 0.228
+        },
+        "40%": {
+          "target_coverage": 0.4,
+          "actual_coverage": 0.4,
+          "selective_accuracy": 0.5667,
+          "selective_risk": 0.4333,
+          "random_rejection_rate": 0.8,
+          "standard_view_coverage": 0.44
+        },
+        "50%": {
+          "target_coverage": 0.5,
+          "actual_coverage": 0.5,
+          "selective_accuracy": 0.5333,
+          "selective_risk": 0.4667,
+          "random_rejection_rate": 0.78,
+          "standard_view_coverage": 0.556
+        },
+        "60%": {
+          "target_coverage": 0.6,
+          "actual_coverage": 0.6,
+          "selective_accuracy": 0.5222,
+          "selective_risk": 0.4778,
+          "random_rejection_rate": 0.72,
+          "standard_view_coverage": 0.664
+        },
+        "70%": {
+          "target_coverage": 0.7,
+          "actual_coverage": 0.7,
+          "selective_accuracy": 0.4619,
+          "selective_risk": 0.5381,
+          "random_rejection_rate": 0.44,
+          "standard_view_coverage": 0.728
+        },
+        "80%": {
+          "target_coverage": 0.8,
+          "actual_coverage": 0.8,
+          "selective_accuracy": 0.4208,
+          "selective_risk": 0.5792,
+          "random_rejection_rate": 0.34,
+          "standard_view_coverage": 0.828
+        },
+        "90%": {
+          "target_coverage": 0.9,
+          "actual_coverage": 0.9,
+          "selective_accuracy": 0.3741,
+          "selective_risk": 0.6259,
+          "random_rejection_rate": 0.26,
+          "standard_view_coverage": 0.932
+        }
+      },
+      "name": "Quality-Only Gate",
+      "description": "Predicted quality grade alone (QualityAssessorNet Q in [0, 9])"
+    },
+    "confidence_only": {
+      "auroc": 0.9672,
+      "average_precision": 0.9108,
+      "aurc": 0.2542,
+      "by_coverage": {
+        "20%": {
+          "target_coverage": 0.2,
+          "actual_coverage": 0.2,
+          "selective_accuracy": 0.95,
+          "selective_risk": 0.05,
+          "random_rejection_rate": 0.94,
+          "standard_view_coverage": 0.228
+        },
+        "40%": {
+          "target_coverage": 0.4,
+          "actual_coverage": 0.4,
+          "selective_accuracy": 0.8083,
+          "selective_risk": 0.1917,
+          "random_rejection_rate": 0.68,
+          "standard_view_coverage": 0.416
+        },
+        "50%": {
+          "target_coverage": 0.5,
+          "actual_coverage": 0.5,
+          "selective_accuracy": 0.66,
+          "selective_risk": 0.34,
+          "random_rejection_rate": 0.56,
+          "standard_view_coverage": 0.512
+        },
+        "60%": {
+          "target_coverage": 0.6,
+          "actual_coverage": 0.6,
+          "selective_accuracy": 0.5556,
+          "selective_risk": 0.4444,
+          "random_rejection_rate": 0.48,
+          "standard_view_coverage": 0.616
+        },
+        "70%": {
+          "target_coverage": 0.7,
+          "actual_coverage": 0.7,
+          "selective_accuracy": 0.4762,
+          "selective_risk": 0.5238,
+          "random_rejection_rate": 0.4,
+          "standard_view_coverage": 0.72
+        },
+        "80%": {
+          "target_coverage": 0.8,
+          "actual_coverage": 0.8,
+          "selective_accuracy": 0.4167,
+          "selective_risk": 0.5833,
+          "random_rejection_rate": 0.36,
+          "standard_view_coverage": 0.832
+        },
+        "90%": {
+          "target_coverage": 0.9,
+          "actual_coverage": 0.9,
+          "selective_accuracy": 0.3741,
+          "selective_risk": 0.6259,
+          "random_rejection_rate": 0.24,
+          "standard_view_coverage": 0.928
+        }
+      },
+      "name": "Confidence-Only Gate",
+      "description": "Top-1 softmax view probability max_c P(y=c|x)"
+    },
+    "heuristic_adequacy": {
+      "auroc": 0.9805,
+      "average_precision": 0.9699,
+      "aurc": 0.249,
+      "by_coverage": {
+        "20%": {
+          "target_coverage": 0.2,
+          "actual_coverage": 0.2,
+          "selective_accuracy": 0.9833,
+          "selective_risk": 0.0167,
+          "random_rejection_rate": 0.98,
+          "standard_view_coverage": 0.236
+        },
+        "40%": {
+          "target_coverage": 0.4,
+          "actual_coverage": 0.4,
+          "selective_accuracy": 0.8167,
+          "selective_risk": 0.1833,
+          "random_rejection_rate": 0.68,
+          "standard_view_coverage": 0.416
+        },
+        "50%": {
+          "target_coverage": 0.5,
+          "actual_coverage": 0.5,
+          "selective_accuracy": 0.6667,
+          "selective_risk": 0.3333,
+          "random_rejection_rate": 0.58,
+          "standard_view_coverage": 0.516
+        },
+        "60%": {
+          "target_coverage": 0.6,
+          "actual_coverage": 0.6,
+          "selective_accuracy": 0.5556,
+          "selective_risk": 0.4444,
+          "random_rejection_rate": 0.46,
+          "standard_view_coverage": 0.612
+        },
+        "70%": {
+          "target_coverage": 0.7,
+          "actual_coverage": 0.7,
+          "selective_accuracy": 0.4762,
+          "selective_risk": 0.5238,
+          "random_rejection_rate": 0.4,
+          "standard_view_coverage": 0.72
+        },
+        "80%": {
+          "target_coverage": 0.8,
+          "actual_coverage": 0.8,
+          "selective_accuracy": 0.4167,
+          "selective_risk": 0.5833,
+          "random_rejection_rate": 0.3,
+          "standard_view_coverage": 0.82
+        },
+        "90%": {
+          "target_coverage": 0.9,
+          "actual_coverage": 0.9,
+          "selective_accuracy": 0.3741,
+          "selective_risk": 0.6259,
+          "random_rejection_rate": 0.24,
+          "standard_view_coverage": 0.928
+        }
+      },
+      "name": "Heuristic Adequacy Gate",
+      "description": "Fixed uncalibrated formula: 0.4*(Q/9) + 0.6*Conf"
+    },
+    "negative_entropy": {
+      "auroc": 0.9679,
+      "average_precision": 0.9232,
+      "aurc": 0.2568,
+      "by_coverage": {
+        "20%": {
+          "target_coverage": 0.2,
+          "actual_coverage": 0.2,
+          "selective_accuracy": 0.9833,
+          "selective_risk": 0.0167,
+          "random_rejection_rate": 0.98,
+          "standard_view_coverage": 0.236
+        },
+        "40%": {
+          "target_coverage": 0.4,
+          "actual_coverage": 0.4,
+          "selective_accuracy": 0.7833,
+          "selective_risk": 0.2167,
+          "random_rejection_rate": 0.74,
+          "standard_view_coverage": 0.428
+        },
+        "50%": {
+          "target_coverage": 0.5,
+          "actual_coverage": 0.5,
+          "selective_accuracy": 0.64,
+          "selective_risk": 0.36,
+          "random_rejection_rate": 0.66,
+          "standard_view_coverage": 0.532
+        },
+        "60%": {
+          "target_coverage": 0.6,
+          "actual_coverage": 0.6,
+          "selective_accuracy": 0.5444,
+          "selective_risk": 0.4556,
+          "random_rejection_rate": 0.56,
+          "standard_view_coverage": 0.632
+        },
+        "70%": {
+          "target_coverage": 0.7,
+          "actual_coverage": 0.7,
+          "selective_accuracy": 0.481,
+          "selective_risk": 0.519,
+          "random_rejection_rate": 0.46,
+          "standard_view_coverage": 0.732
+        },
+        "80%": {
+          "target_coverage": 0.8,
+          "actual_coverage": 0.8,
+          "selective_accuracy": 0.4208,
+          "selective_risk": 0.5792,
+          "random_rejection_rate": 0.34,
+          "standard_view_coverage": 0.828
+        },
+        "90%": {
+          "target_coverage": 0.9,
+          "actual_coverage": 0.9,
+          "selective_accuracy": 0.3741,
+          "selective_risk": 0.6259,
+          "random_rejection_rate": 0.24,
+          "standard_view_coverage": 0.928
+        }
+      },
+      "name": "Negative Entropy Gate",
+      "description": "Predictive certainty -H(P) = sum(p * log p)"
+    },
+    "random_baseline": {
+      "auroc": 0.4825,
+      "average_precision": 0.3372,
+      "aurc": 0.4737,
+      "by_coverage": {
+        "20%": {
+          "target_coverage": 0.2,
+          "actual_coverage": 0.2,
+          "selective_accuracy": 0.3333,
+          "selective_risk": 0.6667,
+          "random_rejection_rate": 0.78,
+          "standard_view_coverage": 0.196
+        },
+        "40%": {
+          "target_coverage": 0.4,
+          "actual_coverage": 0.4,
+          "selective_accuracy": 0.325,
+          "selective_risk": 0.675,
+          "random_rejection_rate": 0.54,
+          "standard_view_coverage": 0.388
+        },
+        "50%": {
+          "target_coverage": 0.5,
+          "actual_coverage": 0.5,
+          "selective_accuracy": 0.3,
+          "selective_risk": 0.7,
+          "random_rejection_rate": 0.46,
+          "standard_view_coverage": 0.492
+        },
+        "60%": {
+          "target_coverage": 0.6,
+          "actual_coverage": 0.6,
+          "selective_accuracy": 0.3111,
+          "selective_risk": 0.6889,
+          "random_rejection_rate": 0.34,
+          "standard_view_coverage": 0.588
+        },
+        "70%": {
+          "target_coverage": 0.7,
+          "actual_coverage": 0.7,
+          "selective_accuracy": 0.3286,
+          "selective_risk": 0.6714,
+          "random_rejection_rate": 0.32,
+          "standard_view_coverage": 0.704
+        },
+        "80%": {
+          "target_coverage": 0.8,
+          "actual_coverage": 0.8,
+          "selective_accuracy": 0.3375,
+          "selective_risk": 0.6625,
+          "random_rejection_rate": 0.2,
+          "standard_view_coverage": 0.8
+        },
+        "90%": {
+          "target_coverage": 0.9,
+          "actual_coverage": 0.9,
+          "selective_accuracy": 0.3296,
+          "selective_risk": 0.6704,
+          "random_rejection_rate": 0.1,
+          "standard_view_coverage": 0.9
+        }
+      },
+      "name": "Random Gate (Baseline)",
+      "description": "Uniform random triage decisions"
+    }
+  }
+}
